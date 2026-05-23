@@ -1,0 +1,24 @@
+# Vivado project files
+vivado/
+*.jou
+*.log
+*.str
+*.xpr
+*.bit
+*.ltx
+
+# Vivado generated
+.Xil/
+*.cache/
+*.hw/
+*.ip_user_files/
+*.runs/
+*.sim/
+
+# iverilog
+*.vvp
+*.vcd
+
+# OS
+.DS_Store
+Thumbs.db
