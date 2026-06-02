@@ -1,7 +1,7 @@
 module top (
     input clk,
     input rst,
-    output [6:0] segs,
+    output [6:0] seg,
     output [3:0] an
 );
 
@@ -28,6 +28,6 @@ module top (
     logic [3:0] digit;
 
     counter cnt(.clk, .rst, .en(tick), .digit);
-    seg7_dec dec(.digit, .segs);
+    seg7_dec dec(.digit, .seg);
 
 endmodule

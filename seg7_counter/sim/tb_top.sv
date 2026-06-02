@@ -2,11 +2,11 @@
 
 module tb_top;
     logic clk, rst;
-    logic [6:0] segs;
+    logic [6:0] seg;
     logic [3:0] an;
 
     top #(.DIV(10)) uut (
-        .clk, .rst, .segs, .an
+        .clk, .rst, .seg, .an
     );
 
     initial clk = 0;
