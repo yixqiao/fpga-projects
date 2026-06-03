@@ -16,7 +16,9 @@ module seg7_decoder(
             4'd7: seg = 7'b1111000;
             4'd8: seg = 7'b0000000;
             4'd9: seg = 7'b0010000;
-            default: seg = 7'b1111111;
+            4'd10: seg = 7'b1111111; // A is all off
+            4'd11: seg = 7'b0000000; // B is all on
+            default: seg = 7'b1111111; // Rest is all off
         endcase
     end
 

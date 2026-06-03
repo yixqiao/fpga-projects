@@ -19,6 +19,7 @@ module top (
 
     logic [3:0] sw_digit3, sw_digit2, sw_digit1, sw_digit0;
     logic [3:0] t_digit3, t_digit2, t_digit1, t_digit0;
+    logic t_dp;
 
 
     logic pulse_start_stop, pulse_reset;
@@ -47,7 +48,7 @@ module top (
         .clk, .rst,
         .pulse_start_stop(timer_mode && pulse_start_stop), .pulse_reset(timer_mode && pulse_reset),
         .pulse_pos(timer_mode && pulse_pos), .pulse_neg(timer_mode && pulse_neg), .pulse_min_sec(timer_mode && pulse_rot_enc),
-        .digit3(t_digit3), .digit2(t_digit2), .digit1(t_digit1), .digit0(t_digit0), .leds_done(led[12:10])
+        .digit3(t_digit3), .digit2(t_digit2), .digit1(t_digit1), .digit0(t_digit0), .dp(t_dp), .leds_done(led[12:10])
     );
     
     // Muxed controller
@@ -57,7 +58,7 @@ module top (
         .digit2(timer_mode ? t_digit2 : sw_digit2),
         .digit1(timer_mode ? t_digit1 : sw_digit1),
         .digit0(timer_mode ? t_digit0 : sw_digit0),
-        .dps(~4'b0100),
+        .dps({1'b1, timer_mode ? t_dp : 1'b0, 1'b1, 1'b1}),
         .seg, .dp, .an
     );
 

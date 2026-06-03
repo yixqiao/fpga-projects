@@ -42,21 +42,25 @@ module stopwatch(
     digit_counter count0 (
         .clk, .rst(rst | reset_digits),
         .tick_pos(tick_10ms), .tick_neg('0),
+        .digit_in('0), .load('0),
         .digit(digit0), .carry_pos(tick_100ms), .carry_neg()
     );
     digit_counter count1 (
         .clk, .rst(rst | reset_digits),
         .tick_pos(tick_100ms), .tick_neg('0),
+        .digit_in('0), .load('0),
         .digit(digit1), .carry_pos(tick_1s), .carry_neg()
     );
     digit_counter count2 (
         .clk, .rst(rst | reset_digits),
         .tick_pos(tick_1s), .tick_neg('0),
+        .digit_in('0), .load('0),
         .digit(digit2), .carry_pos(tick_10s), .carry_neg()
     );
     digit_counter #(.MAX_CNT(5)) count3 (
         .clk, .rst(rst | reset_digits),
         .tick_pos(tick_10s), .tick_neg('0),
+        .digit_in('0), .load('0),
         .digit(digit3), .carry_pos(), .carry_neg()
     );
     

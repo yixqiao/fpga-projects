@@ -3,6 +3,8 @@ module digit_counter(
     input rst,
     input tick_pos,
     input tick_neg,
+    input load,
+    input [3:0] digit_in,
     output logic [3:0] digit,
     output logic carry_pos,
     output logic carry_neg
@@ -14,6 +16,11 @@ module digit_counter(
     always @(posedge clk) begin
         if (rst) begin
             digit <= MIN_CNT;
+            carry_pos <= 0;
+            carry_neg <= 0;
+        end
+        else if (load) begin
+            digit <= digit_in;
             carry_pos <= 0;
             carry_neg <= 0;
         end
