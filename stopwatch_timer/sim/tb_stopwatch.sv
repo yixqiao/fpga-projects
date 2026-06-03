@@ -3,10 +3,10 @@
 module tb_stopwatch;
     logic clk, rst, pulseStartStop, pulseReset;
     logic [3:0] digit3, digit2, digit1, digit0;
-    logic [3:0] an;
+    logic [9:0] onehot_display;
 
     stopwatch #(.DIV(2)) uut (
-        .clk, .rst, .pulseStartStop, .pulseReset, .digit3, .digit2, .digit1, .digit0
+        .clk, .rst, .pulseStartStop, .pulseReset, .digit3, .digit2, .digit1, .digit0, .onehot_display
     );
 
     initial clk = 0;
