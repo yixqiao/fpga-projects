@@ -1,29 +1,48 @@
 module digit_counter(
     input clk,
     input rst,
-    input tick,
+    input tick_pos,
+    input tick_neg,
     output logic [3:0] digit,
-    output logic carry
+    output logic carry_pos,
+    output logic carry_neg
 );
 
+    parameter MIN_CNT = 4'd0;
     parameter MAX_CNT = 4'd9;
 
     always @(posedge clk) begin
         if (rst) begin
-            digit <= '0;
-            carry <= 0;
+            digit <= MIN_CNT;
+            carry_pos <= 0;
+            carry_neg <= 0;
         end
-        else if (tick) begin
+        else if (tick_pos) begin
             if (digit == MAX_CNT) begin
-                digit <= 0;
-                carry <= 1;
+                digit <= MIN_CNT;
+                carry_pos <= 1;
             end
             else begin
                 digit <= digit + 1;
-                carry <= 0;
+                carry_pos <= 0;
             end
+            carry_neg <= 0;
         end
-        else carry <= 0;
+        else if (tick_neg) begin
+            if (digit == MIN_CNT) begin
+                digit <= MAX_CNT;
+                carry_neg <= 1;
+            end
+            else begin
+                digit <= digit - 1;
+                carry_neg <= 0;
+            end
+            carry_pos <= 0;
+        end
+        else begin
+            carry_pos <= 0;
+            carry_neg <= 0;
+        end
     end
 
 

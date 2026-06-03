@@ -1,8 +1,8 @@
 module stopwatch(
     input clk,
     input rst,
-    input pulseStartStop,
-    input pulseReset,
+    input pulse_start_stop,
+    input pulse_reset,
     output logic [3:0] digit3,
     output logic [3:0] digit2,
     output logic [3:0] digit1,
@@ -18,8 +18,8 @@ module stopwatch(
     // FSM logic
     always_comb begin
         case (state)
-            STOPPED: next_state = pulseStartStop ? RUNNING : STOPPED;
-            RUNNING: next_state = pulseStartStop ? STOPPED : RUNNING;
+            STOPPED: next_state = pulse_start_stop ? RUNNING : STOPPED;
+            RUNNING: next_state = pulse_start_stop ? STOPPED : RUNNING;
         endcase
     end
 
@@ -37,12 +37,28 @@ module stopwatch(
     clk_divider #(.DIV(DIV)) divider_10ms (.clk, .rst(rst || state==STOPPED), .tick(tick_10ms));
 
     logic reset_digits;
-    assign reset_digits = (state==STOPPED && pulseReset);
+    assign reset_digits = (state==STOPPED && pulse_reset);
 
-    digit_counter count0 (.clk, .rst(rst | reset_digits), .tick(tick_10ms), .digit(digit0), .carry(tick_100ms));
-    digit_counter count1 (.clk, .rst(rst | reset_digits), .tick(tick_100ms), .digit(digit1), .carry(tick_1s));
-    digit_counter count2 (.clk, .rst(rst | reset_digits), .tick(tick_1s), .digit(digit2), .carry(tick_10s));
-    digit_counter #(.MAX_CNT(5)) count3 (.clk, .rst(rst | reset_digits), .tick(tick_10s), .digit(digit3), .carry());
+    digit_counter count0 (
+        .clk, .rst(rst | reset_digits),
+        .tick_pos(tick_10ms), .tick_neg(),
+        .digit(digit0), .carry_pos(tick_100ms), .carry_neg()
+    );
+    digit_counter count1 (
+        .clk, .rst(rst | reset_digits),
+        .tick_pos(tick_100ms), .tick_neg(),
+        .digit(digit1), .carry_pos(tick_1s), .carry_neg()
+    );
+    digit_counter count2 (
+        .clk, .rst(rst | reset_digits),
+        .tick_pos(tick_1s), .tick_neg(),
+        .digit(digit2), .carry_pos(tick_10s), .carry_neg()
+    );
+    digit_counter #(.MAX_CNT(5)) count3 (
+        .clk, .rst(rst | reset_digits),
+        .tick_pos(tick_10s), .tick_neg(),
+        .digit(digit3), .carry_pos(), .carry_neg()
+    );
     
     always_comb begin
         for (int i=0; i<10; i++) begin

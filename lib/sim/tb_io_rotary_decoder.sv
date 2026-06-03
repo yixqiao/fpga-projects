@@ -2,10 +2,10 @@
 
 module tb_io_rotary_decoder;
     logic clk, rst, a, b;
-    logic pos_pulse, neg_pulse;
+    logic pulse_pos, pulse_neg;
 
     io_rotary_decoder #(.ROTARY_LOCKOUT_CYCLES(1)) dut (
-        .clk, .rst, .enc_a(a), .enc_b(b), .pos_pulse, .neg_pulse
+        .clk, .rst, .enc_a(a), .enc_b(b), .pulse_pos, .pulse_neg
     );
 
     initial clk = 0;
