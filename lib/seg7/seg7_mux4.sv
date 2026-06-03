@@ -1,4 +1,4 @@
-module seg7_mux4(
+module seg7_mux4 #(parameter DIV=100_000)(
     input clk,
     input rst,
     input [3:0] digit3,
@@ -18,7 +18,7 @@ module seg7_mux4(
 
     // Transitions
     always_comb begin
-        case (state)
+        unique case (state)
             D3: next_state = D2;
             D2: next_state = D1;
             D1: next_state = D0;
@@ -27,14 +27,14 @@ module seg7_mux4(
     end
 
     // FF
-    clk_divider #(.DIV(100_000)) digit_clk (.clk, .rst, .tick(digit_tick));
+    clk_divider #(.DIV(DIV)) digit_clk (.clk, .rst, .tick(digit_tick));
     always_ff @(posedge clk) begin
         state <= rst ? D3 : (digit_tick ? next_state : state);
     end
 
     // Output
     always_comb begin
-        case (state)
+        unique case (state)
             D3: active_digit = digit3;
             D2: active_digit = digit2;
             D1: active_digit = digit1;
