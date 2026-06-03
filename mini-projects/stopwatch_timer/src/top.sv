@@ -3,6 +3,7 @@ module top (
     input rst,
     input sw,
     input btnD,
+    output led,
     output [6:0] seg,
     output dp,
     output [3:0] an
@@ -11,5 +12,7 @@ module top (
     logic [3:0] digit3, digit2, digit1, digit0;
 
     stopwatch sw_main (.clk, .rst, .switchRunning(sw), .btnReset(btnD), .digit3, .digit2, .digit1, .digit0);
-    seg7_mux4 seg7_controller (.clk, .rst, .digit3, .digit2, .digit1, .digit0, .dps(4'b0100), .seg, .dp, .an);
+    seg7_mux4 seg7_controller (.clk, .rst, .digit3, .digit2, .digit1, .digit0, .dps(~4'b0100), .seg, .dp, .an);
+    
+    assign led = sw;
 endmodule
