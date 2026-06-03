@@ -18,7 +18,7 @@ module seg7_mux4 #(parameter DIV=100_000)(
 
     // Transitions
     always_comb begin
-        unique case (state)
+        case (state)
             D3: next_state = D2;
             D2: next_state = D1;
             D1: next_state = D0;
@@ -34,7 +34,7 @@ module seg7_mux4 #(parameter DIV=100_000)(
 
     // Output
     always_comb begin
-        unique case (state)
+        case (state)
             D3: active_digit = digit3;
             D2: active_digit = digit2;
             D1: active_digit = digit1;
