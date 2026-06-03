@@ -2,7 +2,7 @@ ifndef TB
 $(error TB is required. Usage: make TB=tb_clk_divider)
 endif
 
-SRCS = sim/$(TB).sv clk/*.sv seg7/*.sv
+SRCS = sim/$(TB).sv src/*.sv
 VCD  = sim/$(TB).vcd
 
 sim: $(VCD)
