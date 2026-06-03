@@ -10,7 +10,7 @@ module timer(
     output logic [3:0] digit2,
     output logic [3:0] digit1,
     output logic [3:0] digit0,
-    output logic [3:0] leds_done
+    output logic [2:0] leds_done
 );
     parameter DIV = 100_000_000; // for 1s tick
 
@@ -22,12 +22,15 @@ module timer(
     logic carry_pos_d0, carry_pos_d1, carry_pos_d2;
     logic carry_neg_d0, carry_neg_d1, carry_neg_d2, carry_neg_d3;
     
+    logic nonzero;
+    assign nonzero = digit0 != 0 || digit1 != 0 || digit2 != 0 || digit3 != 0;
+    
     // FSM logic
     always_comb begin
         case (state)
-            STOPPED_SEC: next_state = pulse_start_stop ? RUNNING : (pulse_min_sec ? STOPPED_MIN : STOPPED_SEC);
-            STOPPED_MIN: next_state = pulse_start_stop ? RUNNING : (pulse_min_sec ? STOPPED_SEC : STOPPED_MIN);
-            RUNNING: next_state = carry_neg_d3 ? DONE : (pulse_start_stop ? STOPPED_SEC : RUNNING);
+            STOPPED_SEC: next_state = (pulse_start_stop && nonzero) ? RUNNING : (pulse_min_sec ? STOPPED_MIN : STOPPED_SEC);
+            STOPPED_MIN: next_state = (pulse_start_stop && nonzero) ? RUNNING : (pulse_min_sec ? STOPPED_SEC : STOPPED_MIN);
+            RUNNING: next_state = carry_neg_d3 ? DONE : ((pulse_start_stop && nonzero) ? STOPPED_SEC : RUNNING);
             DONE: next_state = pulse_reset ? STOPPED_SEC : DONE;
         endcase
     end
@@ -70,5 +73,5 @@ module timer(
         .digit(digit3), .carry_pos(), .carry_neg(carry_neg_d3)
     );
 
-    assign leds_done = {4{state==DONE}};
+    assign leds_done = {3{state==DONE}};
 endmodule

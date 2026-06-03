@@ -1,5 +1,5 @@
 module io_rotary_decoder #(
-    parameter ROTARY_LOCKOUT_CYCLES = 200_000  // default 2ms from 100 MHz
+    parameter ROTARY_LOCKOUT_CYCLES = 500_000  // default 5ms from 100 MHz
 )(
     input clk,
     input rst,
@@ -26,11 +26,11 @@ module io_rotary_decoder #(
         else begin
             prev <= cur;
             case ({prev, cur})
-                4'b00_01, 4'b01_11, 4'b11_10, 4'b10_00: begin
+                4'b10_00: begin  // last step of CW cycle
                     pulse_pos <= 1;
                     pulse_neg <= 0;
                 end
-                4'b00_10, 4'b10_11, 4'b11_01, 4'b01_00: begin
+                4'b01_00: begin  // last step of CCW cycle
                     pulse_pos <= 0;
                     pulse_neg <= 1;
                 end
