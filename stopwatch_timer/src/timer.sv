@@ -36,7 +36,7 @@ module timer(
             STOPPED_SEC: next_state = (pulse_start_stop && nonzero) ? RUNNING : (pulse_min_sec ? STOPPED_MIN : STOPPED_SEC);
             STOPPED_MIN: next_state = (pulse_start_stop && nonzero) ? RUNNING : (pulse_min_sec ? STOPPED_SEC : STOPPED_MIN);
             RUNNING: next_state = carry_neg_d3 ? DONE : ((pulse_start_stop && nonzero) ? STOPPED_SEC : RUNNING);
-            DONE: next_state = pulse_reset ? STOPPED_SEC : DONE;
+            DONE: next_state = (pulse_reset || pulse_start_stop) ? STOPPED_SEC : DONE;
         endcase
     end
 
@@ -105,6 +105,12 @@ module timer(
 
     logic tick_1s_done;
     clk_divider #(.DIV(DIV)) divider_done (.clk, .rst(rst || state == RUNNING), .tick(tick_1s_done));
+    logic ff_1s_done;
+    always_ff @(posedge clk) begin
+        if (rst) ff_1s_done <= 0;
+        else if (state != DONE && next_state == DONE) ff_1s_done <= 1;
+        else if (tick_1s_done) ff_1s_done <= !ff_1s_done;
+    end
     
-    assign leds_done = (state==DONE && tick_1s_done) ? '1 : '0;
+    assign leds_done = (state==DONE && ff_1s_done) ? '1 : '0;
 endmodule

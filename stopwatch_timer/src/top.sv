@@ -34,7 +34,8 @@ module top (
     
     assign timer_mode = sw;
     assign led[15] = timer_mode;
-    assign led[14:13] = '0;
+    assign led[14] = '0;
+    assign led[10] = '0;
 
     // Stopwatch logic
     stopwatch sw_main (
@@ -48,7 +49,7 @@ module top (
         .clk, .rst,
         .pulse_start_stop(timer_mode && pulse_start_stop), .pulse_reset(timer_mode && pulse_reset),
         .pulse_pos(timer_mode && pulse_pos), .pulse_neg(timer_mode && pulse_neg), .pulse_min_sec(timer_mode && pulse_rot_enc),
-        .digit3(t_digit3), .digit2(t_digit2), .digit1(t_digit1), .digit0(t_digit0), .dp(t_dp), .leds_done(led[12:10])
+        .digit3(t_digit3), .digit2(t_digit2), .digit1(t_digit1), .digit0(t_digit0), .dp(t_dp), .leds_done(led[13:11])
     );
     
     // Muxed controller

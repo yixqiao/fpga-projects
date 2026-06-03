@@ -30,53 +30,53 @@ module tb_timer;
         repeat(4) @(posedge clk);
 
         // Set seconds
-        pulse_pos = 1; @(posedge clk); pulse_pos = 0;
+        @(negedge clk); pulse_pos = 1; @(negedge clk); pulse_pos = 0;
         repeat(4) @(posedge clk);
-        pulse_pos = 1; @(posedge clk); pulse_pos = 0;
+        @(negedge clk); pulse_pos = 1; @(negedge clk); pulse_pos = 0;
         repeat(4) @(posedge clk);
-        pulse_pos = 1; @(posedge clk); pulse_pos = 0;
+        @(negedge clk); pulse_pos = 1; @(negedge clk); pulse_pos = 0;
         repeat(4) @(posedge clk);
 
         // Set mins
-        pulse_min_sec = 1; @(posedge clk); pulse_min_sec = 0;
+        @(negedge clk); pulse_min_sec = 1; @(negedge clk); pulse_min_sec = 0;
         repeat(4) @(posedge clk);
-        pulse_pos = 1; @(posedge clk); pulse_pos = 0;
+        @(negedge clk); pulse_pos = 1; @(negedge clk); pulse_pos = 0;
         repeat(4) @(posedge clk);
-        pulse_neg = 1; @(posedge clk); pulse_neg = 0;
+        @(negedge clk); pulse_neg = 1; @(negedge clk); pulse_neg = 0;
         repeat(4) @(posedge clk);
 
         // Run until done, with reset
-        pulse_start_stop = 1; @(posedge clk); pulse_start_stop = 0;
+        @(negedge clk); pulse_start_stop = 1; @(negedge clk); pulse_start_stop = 0;
         repeat(24) @(posedge clk);
-        pulse_reset = 1; @(posedge clk); pulse_reset = 0;
+        @(negedge clk); pulse_reset = 1; @(negedge clk); pulse_reset = 0;
         repeat(10) @(posedge clk);
 
 
         // Set seconds
-        pulse_pos = 1; @(posedge clk); pulse_pos = 0;
+        pulse_pos = 1; repeat(2) @(posedge clk); pulse_pos = 0;
         repeat(4) @(posedge clk);
-        pulse_pos = 1; @(posedge clk); pulse_pos = 0;
+        pulse_pos = 1; repeat(2) @(posedge clk); pulse_pos = 0;
         repeat(4) @(posedge clk);
-        pulse_pos = 1; @(posedge clk); pulse_pos = 0;
+        pulse_pos = 1; repeat(2) @(posedge clk); pulse_pos = 0;
         repeat(16) @(posedge clk);
 
         // Start, stop, reset
-        pulse_start_stop = 1; @(posedge clk); pulse_start_stop = 0;
+        pulse_start_stop = 1; repeat(2) @(posedge clk); pulse_start_stop = 0;
         repeat(4) @(posedge clk);
-        pulse_start_stop = 1; @(posedge clk); pulse_start_stop = 0;
+        pulse_start_stop = 1; repeat(2) @(posedge clk); pulse_start_stop = 0;
         repeat(4) @(posedge clk);
-        pulse_reset = 1; @(posedge clk); pulse_reset = 0;
+        pulse_reset = 1; repeat(2) @(posedge clk); pulse_reset = 0;
         repeat(4) @(posedge clk);
         
         // Set and run again
-        pulse_min_sec = 1; @(posedge clk); pulse_min_sec = 0;
+        pulse_min_sec = 1; repeat(2) @(posedge clk); pulse_min_sec = 0;
         repeat(2) @(posedge clk);
-        pulse_pos = 1; @(posedge clk); pulse_pos = 0;
+        pulse_pos = 1; repeat(2) @(posedge clk); pulse_pos = 0;
         repeat(2) @(posedge clk);
-        pulse_pos = 1; @(posedge clk); pulse_pos = 0;
+        pulse_pos = 1; repeat(2) @(posedge clk); pulse_pos = 0;
         repeat(2) @(posedge clk);
 
-        pulse_start_stop = 1; @(posedge clk); pulse_start_stop = 0;
+        pulse_start_stop = 1; repeat(2) @(posedge clk); pulse_start_stop = 0;
         repeat(32) @(posedge clk);
         $finish;
     end

@@ -1,5 +1,5 @@
 module io_btn_debouncer #(
-    parameter LOCKOUT_CYCLES = 1_000_000  // default 10ms from 100 MHz
+    parameter LOCKOUT_CYCLES = 100_000  // default 1ms from 100 MHz
 )(
     input clk,
     input rst,
@@ -29,7 +29,7 @@ module io_btn_debouncer #(
         end
         else begin
             state <= next_state;
-            pulse <= (next_state==L1 && state==I0); // Negedge should be easy to add
+            pulse <= (next_state==L1 && state==I0); // negedge should be easy to add
 
             if (state==I0 || state==I1) cnt <= '0;
             else begin
