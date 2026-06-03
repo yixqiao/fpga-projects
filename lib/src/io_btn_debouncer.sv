@@ -1,15 +1,16 @@
-module io_debouncer #(
+module io_btn_debouncer #(
     parameter LOCKOUT_CYCLES = 10_000_000  // default 10ms from 100 MHz
 )(
     input clk,
     input rst,
     input in,
-    output logic out
+    output logic out,
+    output logic pulse
 );
     logic [$clog2(LOCKOUT_CYCLES+1)-1:0] cnt = '0;
 
     localparam I0=0, I1=1, L0=2, L1=3;
-    logic [1:0] state, next_state;
+    logic [1:0] state=I0, next_state;
 
     always_comb begin
         case (state)
@@ -24,9 +25,11 @@ module io_debouncer #(
         if (rst) begin
             cnt <= '0;
             state <= I0;
+            pulse <= '0;
         end
         else begin
             state <= next_state;
+            pulse <= (next_state==L1 && state==I0); // Negedge should be easy to add
 
             if (state==I0 || state==I1) cnt <= '0;
             else begin

@@ -12,7 +12,7 @@ module seg7_mux4 #(parameter DIV=100_000)(
 );
 
     localparam D3=3, D2=2, D1=1, D0=0;
-    logic[1:0] state, next_state;
+    logic[1:0] state=D0, next_state;
     logic[3:0] active_digit;
     logic digit_tick;
 

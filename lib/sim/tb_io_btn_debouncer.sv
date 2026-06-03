@@ -1,18 +1,18 @@
 `timescale 1ns / 1ps
 
-module tb_io_debouncer;
-    logic clk, rst, in, out;
+module tb_io_btn_debouncer;
+    logic clk, rst, in, out, pulse;
 
-    io_debouncer #(.LOCKOUT_CYCLES(4)) dut (
-        .clk, .rst, .in, .out
+    io_btn_debouncer #(.LOCKOUT_CYCLES(4)) dut (
+        .clk, .rst, .in, .out, .pulse
     );
 
     initial clk = 0;
     always #5 clk = ~clk;
 
     initial begin
-        $dumpfile("sim/tb_io_debouncer.vcd");
-        $dumpvars(0, tb_io_debouncer);
+        $dumpfile("sim/tb_io_btn_debouncer.vcd");
+        $dumpvars(0, tb_io_btn_debouncer);
 
         rst = 1;
         in = 0;

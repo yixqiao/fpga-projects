@@ -2,7 +2,7 @@ ifndef TB
 $(error TB is required. Usage: make TB=tb_top)
 endif
 
-SRCS = ../lib/src/*.sv src/*.sv
+SRCS = ../lib/src/*.sv src/*.sv sim/$(TB).sv
 VCD  = sim/$(TB).vcd
 
 sim: $(VCD)
