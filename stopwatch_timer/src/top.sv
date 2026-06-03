@@ -38,7 +38,7 @@ module top (
     // Stopwatch logic
     stopwatch sw_main (
         .clk, .rst,
-        .pulse_start_stop(!timer_mode & pulse_start_stop), .pulse_reset(!timer_mode && pulse_reset),
+        .pulse_start_stop(!timer_mode && pulse_start_stop), .pulse_reset(!timer_mode && pulse_reset),
         .digit3(sw_digit3), .digit2(sw_digit2), .digit1(sw_digit1), .digit0(sw_digit0), .onehot_display(led[9:0])
     );
 
@@ -46,7 +46,7 @@ module top (
     timer timer_main (
         .clk, .rst,
         .pulse_start_stop(timer_mode && pulse_start_stop), .pulse_reset(timer_mode && pulse_reset),
-        .pulse_pos(timer_mode && pulse_pos), .pulse_neg(timer_mode && pulse_neg), .pulse_min_sec(timer_mode && pulse_min_sec),
+        .pulse_pos(timer_mode && pulse_pos), .pulse_neg(timer_mode && pulse_neg), .pulse_min_sec(timer_mode && pulse_rot_enc),
         .digit3(t_digit3), .digit2(t_digit2), .digit1(t_digit1), .digit0(t_digit0), .leds_done(led[13:10])
     );
     
