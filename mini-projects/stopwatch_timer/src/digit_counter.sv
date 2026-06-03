@@ -23,7 +23,7 @@ module digit_counter(
                 carry <= 0;
             end
         end
-        else carry = 0;
+        else carry <= 0;
     end
 
 

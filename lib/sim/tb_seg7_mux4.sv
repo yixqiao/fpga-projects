@@ -8,7 +8,7 @@ module tb_seg7_mux4;
     logic [3:0] an;
     logic dp;
 
-    seg7_mux4 #(.DIV(4)) dut (.clk, .rst, .digit3, .digit2, .digit1, .digit0, .dps, .seg, .an, .dp);
+    seg7_mux4 #(.DIV(4)) dut (.clk, .rst, .digit3, .digit2, .digit1, .digit0, .dps, .seg, .dp, .an);
 
     initial clk = 0;
     always #5 clk = ~clk;

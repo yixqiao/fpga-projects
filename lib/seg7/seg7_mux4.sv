@@ -7,8 +7,8 @@ module seg7_mux4 #(parameter DIV=100_000)(
     input [3:0] digit0,
     input [3:0] dps,
     output logic [6:0] seg,
-    output logic [3:0] an,
-    output logic dp
+    output logic dp,
+    output logic [3:0] an
 );
 
     localparam D3=3, D2=2, D1=1, D0=0;
