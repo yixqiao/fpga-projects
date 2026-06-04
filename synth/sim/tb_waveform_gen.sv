@@ -3,7 +3,7 @@ module tb_waveform_gen;
     logic [1:0]  wave_sel;
     logic [23:0] sample;
 
-    waveform_gen dut (.phase, .wave_sel, .sample);
+    waveform_gen #(.ROM_PATH("data/sine_rom.hex")) dut (.phase, .wave_sel, .sample);
 
     initial begin
         $dumpfile("sim/tb_waveform_gen.vcd");
