@@ -3,13 +3,13 @@ module envelope_adsr (
     input logic gate,
     input logic sample_tick,
     // input logic sel_a, sel_d, sel_s, sel_r,
-    output logic [12:0] env_level
+    output logic [11:0] env_level
 );
     // TODO make state transitions based on delta instead of raw env level
-    localparam [12:0] MAX_THRESH = 12'hF00;
-    localparam [12:0] ZERO_THRESH = 12'h100;
-    localparam [12:0] SUS_DELTA_THRESH = 12'h100;
-    localparam [12:0] ENV_MAX = 12'hFFF;
+    localparam [11:0] MAX_THRESH = 12'hF00;
+    localparam [11:0] ZERO_THRESH = 12'h100;
+    localparam [11:0] SUS_DELTA_THRESH = 12'h100;
+    localparam [11:0] ENV_MAX = 12'hFFF;
 
     localparam IDLE=0, ATTACK=1, DECAY=2, SUSTAIN=3, RELEASE=4;
     logic [2:0] state, next_state;
@@ -17,7 +17,7 @@ module envelope_adsr (
     logic [3:0] tick_cnt;
 
     logic [4:0] a_shift, d_shift, r_shift;
-    logic [12:0] s_level;
+    logic [11:0] s_level;
     assign a_shift = 5'd8;
     assign d_shift = 5'd8;
     assign s_level = 12'h3FF;

@@ -30,11 +30,11 @@ module top (
 
     // Envelope (output sample_2)
     logic adsr_gate;
-    logic [23:0] env_level;
+    logic [11:0] env_level;
     logic [35:0] adsr_env_product;
     io_btn_debouncer db_adsr_gate (.clk, .rst, .in(btnC), .out(adsr_gate), .pulse_pos(), .pulse_neg());
     envelope_adsr env_adsr (.clk, .rst, .gate(adsr_gate), .sample_tick, .env_level);
-    assign adsr_env_product = $signed(sample_1) * env_level;
+    assign adsr_env_product = $signed(sample_1) * env_level; // TODO use_dsp48 and possible register rebalancing
     always_ff @(posedge clk)
         sample_2 <= adsr_env_product[35:12];
 
