@@ -1,5 +1,5 @@
 module io_rotary_decoder #(
-    parameter ROTARY_LOCKOUT_CYCLES = 25_000  // default 0.25ms from 100 MHz
+    parameter ROTARY_LOCKOUT_CYCLES = 400_000  // default 4ms from 100 MHz
 )(
     input clk,
     input rst,
