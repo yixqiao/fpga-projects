@@ -1,10 +1,10 @@
 `timescale 1ns / 1ps
 
 module tb_io_btn_debouncer;
-    logic clk, rst, in, out, pulse;
+    logic clk, rst, in, out, pulse_pos, pulse_neg;
 
     io_btn_debouncer #(.LOCKOUT_CYCLES(4)) dut (
-        .clk, .rst, .in, .out, .pulse
+        .clk, .rst, .in, .out, .pulse_pos, .pulse_neg
     );
 
     initial clk = 0;

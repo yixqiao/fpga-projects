@@ -1,6 +1,6 @@
-module i2s_tx (
-    input  logic clk, rst,
-    input  logic [23:0] left, right,
+module io_i2s_tx (
+    input logic clk, rst,
+    input logic [23:0] left, right,
     output logic sample_req,
     output logic mclk, bclk, lrclk, sdin
 );

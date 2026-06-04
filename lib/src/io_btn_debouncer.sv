@@ -5,7 +5,8 @@ module io_btn_debouncer #(
     input rst,
     input in,
     output logic out,
-    output logic pulse
+    output logic pulse_pos,
+    output logic pulse_neg
 );
     logic [$clog2(LOCKOUT_CYCLES+1)-1:0] cnt = '0;
 
@@ -25,11 +26,13 @@ module io_btn_debouncer #(
         if (rst) begin
             cnt <= '0;
             state <= I0;
-            pulse <= '0;
+            pulse_pos <= '0;
+            pulse_neg <= '0;
         end
         else begin
             state <= next_state;
-            pulse <= (next_state==L1 && state==I0); // negedge should be easy to add
+            pulse_pos <= (next_state==L1 && state==I0);
+            pulse_neg <= (next_state==L0 && state==I1);
 
             if (state==I0 || state==I1) cnt <= '0;
             else begin

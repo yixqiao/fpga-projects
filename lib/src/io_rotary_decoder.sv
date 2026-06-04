@@ -10,8 +10,8 @@ module io_rotary_decoder #(
     );
 
     logic a_db, b_db;
-    io_btn_debouncer #(.LOCKOUT_CYCLES(ROTARY_LOCKOUT_CYCLES)) deb_a (.clk, .rst, .in(~enc_a), .out(a_db), .pulse());
-    io_btn_debouncer #(.LOCKOUT_CYCLES(ROTARY_LOCKOUT_CYCLES)) deb_b (.clk, .rst, .in(~enc_b), .out(b_db), .pulse());
+    io_btn_debouncer #(.LOCKOUT_CYCLES(ROTARY_LOCKOUT_CYCLES)) deb_a (.clk, .rst, .in(~enc_a), .out(a_db), .pulse_pos(), .pulse_neg());
+    io_btn_debouncer #(.LOCKOUT_CYCLES(ROTARY_LOCKOUT_CYCLES)) deb_b (.clk, .rst, .in(~enc_b), .out(b_db), .pulse_pos(), .pulse_neg());
 
     // Quadrature decoder
 

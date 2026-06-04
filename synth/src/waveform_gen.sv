@@ -1,5 +1,5 @@
 module waveform_gen #(
-    parameter ROM_PATH = "../data/sine_rom.hex"
+    parameter ROM_PATH = "data/sine_rom.hex"
 )(
     input  logic [23:0] phase,
     input  logic [1:0]  wave_sel,
