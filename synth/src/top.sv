@@ -15,7 +15,7 @@ module top (
 
     i2s_tx tx (
         .clk(clk), .rst(rst),
-        .left(saw >> 2), .right(saw >> 2),
+        .left(saw), .right(saw),
         .sample_req(sreq),
         .mclk(mclk), .bclk(bclk), .lrclk(lrclk), .sdin(sdin)
     );
