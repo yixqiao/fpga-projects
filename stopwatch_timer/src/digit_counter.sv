@@ -14,43 +14,20 @@ module digit_counter(
     parameter MAX_CNT = 4'd9;
 
     always @(posedge clk) begin
-        if (rst) begin
-            digit <= MIN_CNT;
-            carry_pos <= 0;
-            carry_neg <= 0;
-        end
-        else if (load) begin
-            digit <= digit_in;
-            carry_pos <= 0;
-            carry_neg <= 0;
-        end
+        if (rst) digit <= MIN_CNT;
+        else if (load) digit <= digit_in;
         else if (tick_pos) begin
-            if (digit == MAX_CNT) begin
-                digit <= MIN_CNT;
-                carry_pos <= 1;
-            end
-            else begin
-                digit <= digit + 1;
-                carry_pos <= 0;
-            end
-            carry_neg <= 0;
+            if (digit == MAX_CNT) digit <= MIN_CNT;
+            else digit <= digit + 1;
         end
         else if (tick_neg) begin
-            if (digit == MIN_CNT) begin
-                digit <= MAX_CNT;
-                carry_neg <= 1;
-            end
-            else begin
-                digit <= digit - 1;
-                carry_neg <= 0;
-            end
-            carry_pos <= 0;
-        end
-        else begin
-            carry_pos <= 0;
-            carry_neg <= 0;
+            if (digit == MIN_CNT) digit <= MAX_CNT;
+            else digit <= digit - 1;
         end
     end
+    
+    assign carry_pos = !rst && tick_pos && (digit == MAX_CNT);
+    assign carry_neg = !rst && tick_neg && (digit == MIN_CNT);
 
 
 endmodule
