@@ -3,23 +3,25 @@ module envelope_adsr (
     input logic gate,
     input logic sample_tick,
     // input logic sel_a, sel_d, sel_s, sel_r,
-    output logic [23:0] env_level
+    output logic [12:0] env_level
 );
-    localparam [23:0] MAX_THRESH = 24'hFF0000;
-    localparam [23:0] ZERO_THRESH = 24'h008000;
-    localparam [23:0] SUS_DELTA_THRESH = 24'h002000;
-    localparam [23:0] ENV_MAX = 24'hFFFFFF;
+    // TODO make state transitions based on delta instead of raw env level
+    localparam [12:0] MAX_THRESH = 12'hF00;
+    localparam [12:0] ZERO_THRESH = 12'h100;
+    localparam [12:0] SUS_DELTA_THRESH = 12'h100;
+    localparam [12:0] ENV_MAX = 12'hFFF;
 
     localparam IDLE=0, ATTACK=1, DECAY=2, SUSTAIN=3, RELEASE=4;
     logic [2:0] state, next_state;
     logic pulse_start, pulse_end, gate_prev;
+    logic [3:0] tick_cnt;
 
     logic [4:0] a_shift, d_shift, r_shift;
-    logic [23:0] s_level;
-    assign a_shift = 5'd12;
-    assign d_shift = 5'd12;
-    assign s_level = 24'h3FFFFF;
-    assign r_shift = 5'd13;
+    logic [12:0] s_level;
+    assign a_shift = 5'd8;
+    assign d_shift = 5'd8;
+    assign s_level = 12'h3FF;
+    assign r_shift = 5'd8;
 
     // Combinational state transitions
     always_comb begin
@@ -40,18 +42,22 @@ module envelope_adsr (
             state <= IDLE;
             gate_prev <= '0;
             env_level <= '0;
+            tick_cnt <= '0;
         end
         else if (sample_tick) begin
             state <= next_state;
             gate_prev <= gate;
+            tick_cnt <= tick_cnt + 1;
 
-            case (state)
-                IDLE: env_level <= '0;
-                ATTACK: env_level <= env_level + ((ENV_MAX - env_level) >> a_shift);
-                DECAY: env_level <= env_level - ((env_level - s_level) >> d_shift);
-                SUSTAIN: env_level <= s_level;
-                RELEASE: env_level <= env_level - (env_level >> r_shift);
-            endcase
+            if (tick_cnt == 0) begin
+                case (state)
+                    IDLE: env_level <= '0;
+                    ATTACK: env_level <= env_level + ((ENV_MAX - env_level) >> a_shift);
+                    DECAY: env_level <= env_level - ((env_level - s_level) >> d_shift);
+                    SUSTAIN: env_level <= s_level;
+                    RELEASE: env_level <= env_level - (env_level >> r_shift);
+                endcase
+            end
         end
     end
 endmodule
