@@ -2,13 +2,9 @@ module envelope_adsr (
     input logic clk, rst,
     input logic gate,
     input logic sample_tick,
-    // input logic sel_a, sel_d, sel_s, sel_r,
+    input logic sel_a, sel_d, sel_s, sel_r,
     output logic [11:0] env_level
 );
-    // TODO make state transitions based on delta instead of raw env level
-    localparam [11:0] MAX_THRESH = 12'hF00;
-    localparam [11:0] ZERO_THRESH = 12'h100;
-    localparam [11:0] SUS_DELTA_THRESH = 12'h100;
     localparam [11:0] ENV_MAX = 12'hFFF;
 
     localparam IDLE=0, ATTACK=1, DECAY=2, SUSTAIN=3, RELEASE=4;
@@ -18,10 +14,15 @@ module envelope_adsr (
 
     logic [4:0] a_shift, d_shift, r_shift;
     logic [11:0] s_level;
-    assign a_shift = 5'd8;
-    assign d_shift = 5'd8;
-    assign s_level = 12'h3FF;
-    assign r_shift = 5'd8;
+    assign a_shift = sel_a ? 5'd9 : 5'd7;
+    assign d_shift = sel_d ? 5'd9 : 5'd7;
+    assign s_level = sel_s ? 12'h800: 12'h200;
+    assign r_shift = sel_r ? 5'd10 : 5'd8;
+
+    logic [11:0] attack_delta, decay_delta, release_delta;
+    assign attack_delta  = (ENV_MAX - env_level) >> a_shift;
+    assign decay_delta   = (env_level > s_level) ? ((env_level - s_level) >> d_shift) : 0;
+    assign release_delta = env_level >> r_shift;
 
     // Combinational state transitions
     always_comb begin
@@ -29,10 +30,10 @@ module envelope_adsr (
         pulse_end = !gate & gate_prev;
         case (state)
             IDLE: next_state = pulse_start ? ATTACK : IDLE;
-            ATTACK: next_state = pulse_end ? RELEASE : (env_level >= MAX_THRESH ? DECAY : ATTACK);
-            DECAY: next_state = pulse_end ? RELEASE : (env_level <= s_level + SUS_DELTA_THRESH ? SUSTAIN : DECAY);
+            ATTACK: next_state = pulse_end ? RELEASE : (attack_delta==0 ? DECAY : ATTACK);
+            DECAY: next_state = pulse_end ? RELEASE : (decay_delta==0 ? SUSTAIN : DECAY);
             SUSTAIN: next_state = pulse_end ? RELEASE : SUSTAIN;
-            RELEASE: next_state = pulse_start ? ATTACK : (env_level <= ZERO_THRESH ? IDLE : RELEASE);
+            RELEASE: next_state = pulse_start ? ATTACK : (release_delta==0 ? IDLE : RELEASE);
             default: next_state = IDLE;
         endcase 
     end
@@ -52,10 +53,10 @@ module envelope_adsr (
             if (tick_cnt == 0) begin
                 case (state)
                     IDLE: env_level <= '0;
-                    ATTACK: env_level <= env_level + ((ENV_MAX - env_level) >> a_shift);
-                    DECAY: env_level <= env_level - ((env_level - s_level) >> d_shift);
+                    ATTACK: env_level <= env_level + attack_delta;
+                    DECAY: env_level <= env_level - decay_delta;
                     SUSTAIN: env_level <= s_level;
-                    RELEASE: env_level <= env_level - (env_level >> r_shift);
+                    RELEASE: env_level <= env_level - release_delta;
                 endcase
             end
         end
