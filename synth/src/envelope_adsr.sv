@@ -31,6 +31,7 @@ module envelope_adsr (
             DECAY: next_state = pulse_end ? RELEASE : (env_level <= s_level + SUS_DELTA_THRESH ? SUSTAIN : DECAY);
             SUSTAIN: next_state = pulse_end ? RELEASE : SUSTAIN;
             RELEASE: next_state = pulse_start ? ATTACK : (env_level <= ZERO_THRESH ? IDLE : RELEASE);
+            default: next_state = IDLE;
         endcase 
     end
 

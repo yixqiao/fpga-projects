@@ -26,7 +26,7 @@ module top (
     );
 
     // Get waveform (output sample_1)
-    waveform_gen #(.ROM_PATH("../data/sine_rom.hex")) wave_gen (.phase, .wave_sel(sw[1:0]), .sample(sample_1));
+    waveform_gen wave_gen (.phase, .wave_sel(sw[1:0]), .sample(sample_1));
 
     // Envelope (output sample_2)
     logic adsr_gate;

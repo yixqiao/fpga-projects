@@ -1,12 +1,10 @@
-module waveform_gen #(
-    parameter ROM_PATH = "data/sine_rom.hex"
-)(
+module waveform_gen (
     input  logic [23:0] phase,
     input  logic [1:0]  wave_sel,
     output logic [23:0] sample
 );
     logic [23:0] sine_rom [0:255];
-    initial $readmemh(ROM_PATH, sine_rom);
+    initial $readmemh("../data/sine_rom.hex", sine_rom);
 
     logic [21:0] tri_fold;
     logic [23:0] saw, square, triangle, sine;
