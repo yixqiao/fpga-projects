@@ -1,22 +1,27 @@
 module top (
-    input  logic clk,          // 100 MHz
-    input  logic rst,          // btnC
+    input logic clk,
+    input logic rst,
+    input logic [3:0] sw,
     output logic mclk, bclk, lrclk, sdin
 );
-    logic        sreq;
-    logic [23:0] saw;
+    logic sample_req;
+    logic [23:0] phase;
+
+    logic [23:0] inc;
+    logic [23:0] sample;
+    note_select ns (.note_sel(sw[3:2]), .inc);
+    waveform_gen wave_gen (.phase, .wave_sel(sw[1:0]), .sample);
 
     phase_acc #(.W(24)) nco (
-        .clk(clk), .rst(rst),
-        .tick(sreq),
-        .inc(24'd150_998),     // A4 = 440 Hz
-        .phase(saw)
+        .clk, .rst(btnC),
+        .tick(sample_req), .inc,
+        .phase
     );
 
     i2s_tx tx (
-        .clk(clk), .rst(rst),
-        .left(saw), .right(saw),
-        .sample_req(sreq),
-        .mclk(mclk), .bclk(bclk), .lrclk(lrclk), .sdin(sdin)
+        .clk, .rst(btnC),
+        .left(sample), .right(sample),
+        .sample_req,
+        .mclk, .bclk, .lrclk, .sdin
     );
 endmodule
