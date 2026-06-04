@@ -1,6 +1,6 @@
 module top (
     input logic clk,
-    input logic rst,
+    input logic btnC,
     input logic [3:0] sw,
     output logic mclk, bclk, lrclk, sdin
 );

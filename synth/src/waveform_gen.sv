@@ -4,7 +4,8 @@ module waveform_gen (
     output logic [23:0] sample
 );
     logic [23:0] sine_rom [0:255];
-    initial $readmemh("data/sine_rom.hex", sine_rom);
+    // initial $readmemh("data/sine_rom.hex", sine_rom);
+    initial $readmemh("../data/sine_rom.hex", sine_rom); // for vivado
 
     logic [21:0] tri_fold;
     logic [23:0] saw, square, triangle, sine;
