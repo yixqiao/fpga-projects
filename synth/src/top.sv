@@ -14,10 +14,10 @@ module top (
     // Reset gen
     rst_gen rg (.clk, .rst);
 
-    // Switch: volume 11-10, note 9-8, waveform 7-6, filter 5-4, ADSR 3-0
+    // Switch: volume 11:10, note 9:8, waveform 7:6, filter 5:4, ADSR 3:0
 
     // Choose note (output inc)
-    note_select ns (.note_sel(sw[9-8]), .inc);
+    note_select ns (.note_sel(sw[9:8]), .inc);
 
     // Get phase (output phase)
     phase_acc #(.W(24)) nco (
