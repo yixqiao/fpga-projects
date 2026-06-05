@@ -36,7 +36,7 @@ module tb_audio_svf;
     initial phase = 0;
     always @(posedge clk) begin
         if (sample_tick)
-            phase <= phase + 24'h155590; // pitch: adjust increment as needed
+            phase <= phase + 24'h105590; // pitch: adjust increment as needed
     end
     assign sample_in = {~phase[23], phase[22:0]};
 
