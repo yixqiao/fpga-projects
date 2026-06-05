@@ -38,10 +38,23 @@ module top (
         .sel_a(sw[3]), .sel_d(sw[2]), .sel_s(sw[1]), .sel_r(sw[0]),
         .env_level
         );
+    logic signed [23:0] s1_reg;
+    logic signed [12:0] env_reg;
+    logic signed [36:0] mult_reg;
+    
     (* use_dsp48 = "yes" *)
     always_ff @(posedge clk) begin
-        if (rst) sample_env <= 0;
-        else sample_env <= $signed(sample_wave) * $signed({1'b0, env_level}) >> 12;
+        if (rst) begin
+            s1_reg   <= '0;
+            env_reg  <= '0;
+            mult_reg <= '0;
+            sample_env <= '0;
+        end else begin
+            s1_reg   <= sample_wave; // AREG stage
+            env_reg  <= {1'b0, env_level}; // BREG stage
+            mult_reg <= s1_reg * env_reg; // MREG stage
+            sample_env <= mult_reg >>> 12; // PREG stage
+        end
     end
 
     // Filter (output sample_svf)
