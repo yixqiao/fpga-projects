@@ -6,6 +6,7 @@ module envelope_adsr (
     output logic [11:0] env_level
 );
     localparam [11:0] ENV_MAX = 12'hFFF;
+    localparam [11:0] LEAK_DELTA = 12'h001;
 
     localparam IDLE=0, ATTACK=1, DECAY=2, SUSTAIN=3, RELEASE=4;
     logic [2:0] state, next_state;
@@ -14,9 +15,9 @@ module envelope_adsr (
 
     logic [4:0] a_shift, d_shift, r_shift;
     logic [11:0] s_level;
-    assign a_shift = sel_a ? 5'd9 : 5'd7;
-    assign d_shift = sel_d ? 5'd9 : 5'd7;
-    assign s_level = sel_s ? 12'h800: 12'h200;
+    assign a_shift = sel_a ? 5'd10 : 5'd6;
+    assign d_shift = sel_d ? 5'd10 : 5'd6;
+    assign s_level = sel_s ? 12'h600: 12'h100;
     assign r_shift = sel_r ? 5'd10 : 5'd8;
 
     logic [11:0] attack_delta, decay_delta, release_delta;
@@ -52,10 +53,10 @@ module envelope_adsr (
 
             if (tick_cnt == 0) begin
                 case (state)
-                    IDLE: env_level <= '0;
+                    IDLE: env_level <= (env_level <= LEAK_DELTA) ? '0 : env_level - LEAK_DELTA;
                     ATTACK: env_level <= env_level + attack_delta;
                     DECAY: env_level <= env_level - decay_delta;
-                    SUSTAIN: env_level <= s_level;
+                    SUSTAIN: env_level <= (env_level <= s_level || env_level-s_level <= LEAK_DELTA) ? s_level : env_level - LEAK_DELTA;
                     RELEASE: env_level <= env_level - release_delta;
                 endcase
             end

@@ -18,16 +18,16 @@ module tb_envelope_adsr;
         $dumpvars(0, tb_envelope_adsr);
 
         rst = 1; gate = 0;
-        sel_a=0; sel_d=0; sel_s=0; sel_r=0;
+        sel_a=0; sel_d=0; sel_s=1; sel_r=1;
         repeat(4) @(posedge clk);
         rst = 0; sample_tick = 1;
         repeat(4) @(posedge clk);
 
         // Full ADSR cycle: hold gate through attack+decay, then release
         gate = 1;
-        repeat(50000) @(posedge clk);
+        repeat(80000) @(posedge clk);
         gate = 0;
-        repeat(10000) @(posedge clk);
+        repeat(30000) @(posedge clk);
 
         // Short press (staccato): release during attack
         gate = 1;
