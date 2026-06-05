@@ -1,7 +1,7 @@
 module top (
     input logic clk,
     input logic btnC,
-    input logic [9:0] sw,
+    input logic [11:0] sw,
     output logic mclk, bclk, lrclk, sdin
 );
     logic rst;
@@ -14,10 +14,10 @@ module top (
     // Reset gen
     rst_gen rg (.clk, .rst);
 
-    // Switch: volume, note, waveform, ADSR
+    // Switch: volume 11-10, note 9-8, waveform 7-6, filter 5-4, ADSR 3-0
 
     // Choose note (output inc)
-    note_select ns (.note_sel(sw[7:6]), .inc);
+    note_select ns (.note_sel(sw[9-8]), .inc);
 
     // Get phase (output phase)
     phase_acc #(.W(24)) nco (
@@ -27,7 +27,7 @@ module top (
     );
 
     // Get waveform (output sample_wave)
-    waveform_gen wave_gen (.phase, .wave_sel(sw[5:4]), .sample(sample_wave));
+    waveform_gen wave_gen (.phase, .wave_sel(sw[7-6]), .sample(sample_wave));
 
     // Envelope (output sample_env)
     logic adsr_gate;
@@ -41,7 +41,7 @@ module top (
     logic signed [23:0] s1_reg;
     logic signed [12:0] env_reg;
     logic signed [36:0] mult_reg;
-    
+    // TODO move envelope multiply into a separate module
     (* use_dsp48 = "yes" *)
     always_ff @(posedge clk) begin
         if (rst) begin
@@ -61,12 +61,12 @@ module top (
     // Right shift by one before filter
     audio_svf svf (
         .clk, .rst, .sample_tick,
-        .sample_in($signed(sample_env) >>> 1), .F(16'sh218A), .Q(16'sh5A82), .filt_sel(2'b00),
+        .sample_in($signed(sample_env) >>> 1), .F(sw[5] ? 16'sh4000 : 16'sh0AAA), .Q(sw[4] ? 16'sh7FFF : 16'sh3FFF), .filt_sel(2'b00),
         .sample_out(sample_svf)
     );
 
     // Volume control (output sample_vol)
-    audio_volume_control vol_control (.volume(sw[9:8]), .sample_in(sample_svf), .sample_out(sample_vol));
+    audio_volume_control vol_control (.volume(sw[11:10]), .sample_in(sample_svf), .sample_out(sample_vol));
 
     // Transmit to I2S
     io_i2s_tx tx (
