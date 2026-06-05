@@ -2,8 +2,10 @@ module top (
     input logic clk,
     input logic btnC,
     input logic [11:0] sw,
+    output logic [11:0] led,
     output logic mclk, bclk, lrclk, sdin
 );
+    assign led = 12'b001100110000; // TODO remove
     logic rst;
     logic sample_tick;
     logic [23:0] phase;
@@ -88,7 +90,7 @@ module top (
     // Right shift by one before filter
     audio_svf svf (
         .clk, .rst, .sample_tick,
-        .sample_in($signed(sample_env) >>> 2), .F(F + f_floor), .Q(sw[4] ? 16'sh3000 : 16'sh6800), .filt_sel(2'b00),
+        .sample_in($signed(sample_env) >>> 2), .F(F + f_floor), .Q(sw[4] ? 16'sh3800 : 16'sh7000), .filt_sel(2'b00),
         .sample_out(sample_svf)
     );
 
