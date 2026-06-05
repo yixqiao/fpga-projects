@@ -58,9 +58,10 @@ module top (
     end
 
     // Filter (output sample_svf)
+    // Right shift by one before filter
     audio_svf svf (
         .clk, .rst, .sample_tick,
-        .sample_in(sample_env), .F(16'sh218A), .Q(16'sh5A82), .filt_sel(2'b00),
+        .sample_in($signed(sample_env) >>> 1), .F(16'sh218A), .Q(16'sh5A82), .filt_sel(2'b00),
         .sample_out(sample_svf)
     );
 

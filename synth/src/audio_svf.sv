@@ -29,7 +29,8 @@ module audio_svf (
         else begin
             v0 <= sample_tick;
             if (sample_tick) begin
-                f_a <= F; q_a <= Q; band_b <= band; in_r <= sample_in;
+                f_a <= F; q_a <= Q; band_b <= band;
+                in_r <= sample_in;
             end
         end
     end
