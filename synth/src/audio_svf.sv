@@ -2,7 +2,7 @@ module audio_svf (
     input  logic        clk, rst,
     input  logic        sample_tick,
     input  logic signed [23:0] sample_in,
-    input  logic signed [15:0] F, Q,
+    input  logic signed [15:0] F, Q, // TODO rename Q to k, misleading
     input  logic [1:0]  filt_sel,
     output logic signed [23:0] sample_out
 );

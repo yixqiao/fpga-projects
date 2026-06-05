@@ -39,7 +39,7 @@ module top (
         .env_level
         );
     logic signed [23:0] s1_reg;
-    logic signed [11:0] env_reg;
+    logic signed [12:0] env_reg;
     logic signed [36:0] mult_reg;
     // TODO move envelope multiply into a separate module
     (* use_dsp48 = "yes" *)
@@ -63,11 +63,11 @@ module top (
     // When env=0x000 (off):  F_final = F_floor (filter closed)
 
     logic signed [15:0] f_mod_reg;    // AREG: mod cutoff
-    logic signed [11:0] env_f_reg;     // BREG: zero-extended env_level
-    logic signed [27:0] f_mult_reg;    // MREG: 16+12 = 28-bit product
+    logic signed [12:0] env_f_reg;     // BREG: zero-extended env_level
+    logic signed [28:0] f_mult_reg;    // MREG: 16+13 = 28-bit product
     logic signed [15:0] F;             // PREG: final F after scale-back
     logic signed [15:0] f_floor;
-    assign f_floor = sw[5] ? 16'sh2000 : 16'sh0A00;
+    assign f_floor = sw[5] ? 16'sh1000 : 16'sh0A00;
 
     (* use_dsp48 = "yes" *)
     always_ff @(posedge clk) begin
@@ -80,7 +80,7 @@ module top (
             f_mod_reg <= sw[5] ? 16'sh4000 : 16'sh2000;  // AREG
             env_f_reg  <= $signed({1'b0, env_level});       // BREG: unsigned→signed
             f_mult_reg <= f_mod_reg * env_f_reg;           // MREG
-            F          <= (f_mult_reg >>> 12) + f_floor;                // PREG
+            F          <= (f_mult_reg >>> 12);                // PREG
         end
     end
 
@@ -88,7 +88,7 @@ module top (
     // Right shift by one before filter
     audio_svf svf (
         .clk, .rst, .sample_tick,
-        .sample_in($signed(sample_env) >>> 2), .F, .Q(sw[4] ? 16'sh7FFF : 16'sh3FFF), .filt_sel(2'b00),
+        .sample_in($signed(sample_env) >>> 2), .F(F + f_floor), .Q(sw[4] ? 16'sh3000 : 16'sh6800), .filt_sel(2'b00),
         .sample_out(sample_svf)
     );
 
