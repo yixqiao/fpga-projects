@@ -6,21 +6,21 @@ module audio_svf (
     input  logic [1:0]  filt_sel,
     output logic signed [23:0] sample_out
 );
-    logic signed [26:0] low, band;
+    logic signed [23:0] low, band;
 
     // ---- Multiply 1 (F*band, Q*band) pipeline ----
     logic signed [15:0] f_a, q_a;         // AREG
-    logic signed [26:0] band_b, in_r;     // BREG + held input
-    logic signed [42:0] fb_m, qb_m;       // MREG (full width)
-    logic signed [26:0] Fb, Qb;           // PREG (after >>15)
+    logic signed [23:0] band_b, in_r;     // BREG + held input
+    logic signed [39:0] fb_m, qb_m;       // MREG (full width)
+    logic signed [23:0] Fb, Qb;           // PREG (after >>15)
 
     // ---- Multiply 2 (F*high) pipeline ----
     logic signed [15:0] f_a2;             // AREG
-    logic signed [26:0] high_b;           // BREG
-    logic signed [42:0] fh_m;             // MREG (full width)
-    logic signed [26:0] Fh;               // PREG
+    logic signed [23:0] high_b;           // BREG
+    logic signed [39:0] fh_m;             // MREG (full width)
+    logic signed [23:0] Fh;               // PREG
 
-    logic signed [26:0] low_next, high_c;
+    logic signed [23:0] low_next, high_c;
     logic v0, v1, v2, v3, v4, v5;
 
     // Stage 0: capture mult1 inputs on tick (AREG/BREG)
@@ -29,8 +29,7 @@ module audio_svf (
         else begin
             v0 <= sample_tick;
             if (sample_tick) begin
-                f_a <= F; q_a <= Q; band_b <= band;
-                in_r <= {{3{sample_in[23]}}, sample_in};
+                f_a <= F; q_a <= Q; band_b <= band; in_r <= sample_in;
             end
         end
     end
@@ -51,8 +50,8 @@ module audio_svf (
         if (rst) begin Fb<='0; Qb<='0; v2<='0; end
         else begin
             v2 <= v1;
-            Fb <= fb_m[41:15];
-            Qb <= qb_m[41:15];
+            Fb <= fb_m >>> 15;
+            Qb <= qb_m >>> 15;
         end
     end
 
@@ -86,7 +85,7 @@ module audio_svf (
         if (rst) begin Fh<='0; v5<='0; end
         else begin
             v5 <= v4;
-            Fh <= fh_m[41:15];
+            Fh <= fh_m >>> 15;
         end
     end
 
@@ -96,25 +95,12 @@ module audio_svf (
         else if (v5) band <= band + Fh;
     end
 
-    logic [26:0] sample_out_guarded;
     always_comb begin
         case (filt_sel)
-            2'b00: sample_out_guarded = low;
-            2'b01: sample_out_guarded = band;
-            2'b10: sample_out_guarded = high_c;
-            2'b11: sample_out_guarded = in_r - Qb;
+            2'b00: sample_out = low;
+            2'b01: sample_out = band;
+            2'b10: sample_out = high_c;
+            2'b11: sample_out = in_r - Qb;
         endcase
     end
-    
-    logic signed [23:0] sat_out;
-    always_comb begin
-        if (sample_out_guarded > 27'sd8388607)
-            sat_out = 24'sh7FFFFF;        // clamp positive
-        else if (sample_out_guarded < -27'sd8388608)
-            sat_out = 24'sh800000;        // clamp negative
-        else
-            sat_out = sample_out_guarded[23:0];
-    end
-    assign sample_out = sat_out;
-
 endmodule
