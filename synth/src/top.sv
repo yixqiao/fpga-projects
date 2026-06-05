@@ -9,7 +9,7 @@ module top (
     logic [23:0] phase;
 
     logic [23:0] inc;
-    logic [23:0] sample_1, sample_2, sample_3;
+    logic [23:0] sample_wave, sample_env, sample_svf, sample_vol;
 
     // Reset gen
     rst_gen rg (.clk, .rst);
@@ -26,10 +26,10 @@ module top (
         .phase
     );
 
-    // Get waveform (output sample_1)
-    waveform_gen wave_gen (.phase, .wave_sel(sw[5:4]), .sample(sample_1));
+    // Get waveform (output sample_wave)
+    waveform_gen wave_gen (.phase, .wave_sel(sw[5:4]), .sample(sample_wave));
 
-    // Envelope (output sample_2)
+    // Envelope (output sample_env)
     logic adsr_gate;
     logic [11:0] env_level;
     io_btn_debouncer db_adsr_gate (.clk, .rst, .in(btnC), .out(adsr_gate), .pulse_pos(), .pulse_neg());
@@ -40,17 +40,24 @@ module top (
         );
     (* use_dsp48 = "yes" *)
     always_ff @(posedge clk) begin
-        if (rst) sample_2 <= 0;
-        else sample_2 <= $signed(sample_1) * $signed({1'b0, env_level}) >> 12;
+        if (rst) sample_env <= 0;
+        else sample_env <= $signed(sample_wave) * $signed({1'b0, env_level}) >> 12;
     end
 
-    // Volume control (output sample_3)
-    audio_volume_control vol_control (.volume(sw[9:8]), .sample_in(sample_2), .sample_out(sample_3));
+    // Filter (output sample_svf)
+    audio_svf svf (
+        .clk, .rst, .sample_tick,
+        .sample_in(sample_env), .F(16'sh218A), .Q(16'sh5A82), .filt_sel(2'b00),
+        .sample_out(sample_svf)
+    );
+
+    // Volume control (output sample_vol)
+    audio_volume_control vol_control (.volume(sw[9:8]), .sample_in(sample_svf), .sample_out(sample_vol));
 
     // Transmit to I2S
     io_i2s_tx tx (
         .clk, .rst,
-        .left(sample_3), .right(sample_3),
+        .left(sample_vol), .right(sample_vol),
         .sample_req(sample_tick),
         .mclk, .bclk, .lrclk, .sdin
     );
