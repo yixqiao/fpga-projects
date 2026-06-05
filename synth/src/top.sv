@@ -27,7 +27,7 @@ module top (
     );
 
     // Get waveform (output sample_wave)
-    waveform_gen wave_gen (.phase, .wave_sel(sw[7-6]), .sample(sample_wave));
+    waveform_gen wave_gen (.phase, .wave_sel(sw[7:6]), .sample(sample_wave));
 
     // Envelope (output sample_env)
     logic adsr_gate;
@@ -39,7 +39,7 @@ module top (
         .env_level
         );
     logic signed [23:0] s1_reg;
-    logic signed [12:0] env_reg;
+    logic signed [11:0] env_reg;
     logic signed [36:0] mult_reg;
     // TODO move envelope multiply into a separate module
     (* use_dsp48 = "yes" *)
@@ -57,16 +57,43 @@ module top (
         end
     end
 
+    // F envelope modulation pipeline
+    // F_final = F_mod * env_level >> 12
+    // When env=0xFFF (max): F_final ≈ F_floor + F_mod (fully open)
+    // When env=0x000 (off):  F_final = F_floor (filter closed)
+
+    logic signed [15:0] f_mod_reg;    // AREG: mod cutoff
+    logic signed [11:0] env_f_reg;     // BREG: zero-extended env_level
+    logic signed [27:0] f_mult_reg;    // MREG: 16+12 = 28-bit product
+    logic signed [15:0] F;             // PREG: final F after scale-back
+    logic signed [15:0] f_floor;
+    assign f_floor = sw[5] ? 16'sh2000 : 16'sh0A00;
+
+    (* use_dsp48 = "yes" *)
+    always_ff @(posedge clk) begin
+        if (rst) begin
+            f_mod_reg <= '0;
+            env_f_reg  <= '0;
+            f_mult_reg <= '0;
+            F          <= '0;
+        end else begin
+            f_mod_reg <= sw[5] ? 16'sh4000 : 16'sh2000;  // AREG
+            env_f_reg  <= $signed({1'b0, env_level});       // BREG: unsigned→signed
+            f_mult_reg <= f_mod_reg * env_f_reg;           // MREG
+            F          <= (f_mult_reg >>> 12) + f_floor;                // PREG
+        end
+    end
+
     // Filter (output sample_svf)
     // Right shift by one before filter
     audio_svf svf (
         .clk, .rst, .sample_tick,
-        .sample_in($signed(sample_env) >>> 1), .F(sw[5] ? 16'sh4000 : 16'sh0AAA), .Q(sw[4] ? 16'sh7FFF : 16'sh3FFF), .filt_sel(2'b00),
+        .sample_in($signed(sample_env) >>> 2), .F, .Q(sw[4] ? 16'sh7FFF : 16'sh3FFF), .filt_sel(2'b00),
         .sample_out(sample_svf)
     );
 
     // Volume control (output sample_vol)
-    audio_volume_control vol_control (.volume(sw[11:10]), .sample_in(sample_svf), .sample_out(sample_vol));
+    audio_volume_control vol_control (.volume(sw[11:10]), .sample_in(sample_svf <<< 1), .sample_out(sample_vol));
 
     // Transmit to I2S
     io_i2s_tx tx (
