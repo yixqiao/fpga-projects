@@ -1,11 +1,12 @@
 module top (
     input logic clk,
     input logic btnC,
-    input logic [11:0] sw,
-    output logic [11:0] led,
+    input logic [9:0] sw,
+    input logic PS2Clk, PS2Data,
+    output logic [9:0] led,
     output logic mclk, bclk, lrclk, sdin
 );
-    assign led = 12'b001100110000; // TODO remove
+    assign led = 12'b1100110000; // TODO remove
     logic rst;
     logic sample_tick;
     logic [23:0] phase;
@@ -16,10 +17,16 @@ module top (
     // Reset gen
     rst_gen rg (.clk, .rst);
 
-    // Switch: volume 11:10, note 9:8, waveform 7:6, filter 5:4, ADSR 3:0
+    // Switch: volume 9:8, waveform 7:6, filter 5:4, ADSR 3:0
 
-    // Choose note (output inc)
-    note_select ns (.note_sel(sw[9:8]), .inc);
+    // PS2 input (output scancode, valid)
+    logic [7:0] ps2_scancode;
+    logic ps2_valid;
+    io_ps2_rx ps2 (.clk, .rst, .ps2_clk(PS2Clk), .ps2_data(PS2Data), .scancode(ps2_scancode), .valid(ps2_valid));
+
+    // Choose note (output inc, adsr_gate)
+    logic adsr_gate;
+    note_lut note (.clk, .rst, .scancode(ps2_scancode), .valid(ps2_valid), .inc, .gate(adsr_gate));
 
     // Get phase (output phase)
     phase_acc #(.W(24)) nco (
@@ -32,9 +39,7 @@ module top (
     waveform_gen wave_gen (.phase, .wave_sel(sw[7:6]), .sample(sample_wave));
 
     // Envelope (output sample_env)
-    logic adsr_gate;
     logic [11:0] env_level;
-    io_btn_debouncer db_adsr_gate (.clk, .rst, .in(btnC), .out(adsr_gate), .pulse_pos(), .pulse_neg());
     envelope_adsr env_adsr (
         .clk, .rst, .gate(adsr_gate), .sample_tick,
         .sel_a(sw[3]), .sel_d(sw[2]), .sel_s(sw[1]), .sel_r(sw[0]),
@@ -95,7 +100,7 @@ module top (
     );
 
     // Volume control (output sample_vol)
-    audio_volume_control vol_control (.volume(sw[11:10]), .sample_in(sample_svf <<< 1), .sample_out(sample_vol));
+    audio_volume_control vol_control (.volume(sw[9:8]), .sample_in(sample_svf <<< 1), .sample_out(sample_vol));
 
     // Transmit to I2S
     io_i2s_tx tx (
