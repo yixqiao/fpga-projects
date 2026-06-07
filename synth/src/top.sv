@@ -1,6 +1,5 @@
 module top (
     input logic clk,
-    input logic btnC,
     input logic [9:0] sw,
     input logic PS2Clk, PS2Data,
     output logic [9:0] led,
