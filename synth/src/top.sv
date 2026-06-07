@@ -6,7 +6,6 @@ module top (
     output logic [9:0] led,
     output logic mclk, bclk, lrclk, sdin
 );
-    assign led = 12'b1100110000; // TODO remove
     logic rst;
     logic sample_tick;
     logic [23:0] phase;
@@ -23,6 +22,23 @@ module top (
     logic [7:0] ps2_scancode;
     logic ps2_valid;
     io_ps2_rx ps2 (.clk, .rst, .ps2_clk(PS2Clk), .ps2_data(PS2Data), .scancode(ps2_scancode), .valid(ps2_valid));
+
+    // Sticky latches — stay high once triggered
+    logic ps2_clk_seen, ps2_valid_seen;
+    always_ff @(posedge clk) begin
+        if (rst) begin
+            ps2_clk_seen  <= 0;
+            ps2_valid_seen <= 0;
+        end else begin
+            if (PS2Clk == 0)  ps2_clk_seen  <= 1; // any CLK low = keyboard talking
+            if (ps2_valid)    ps2_valid_seen <= 1;
+        end
+    end
+
+    assign led[0] = ps2_clk_seen;      // did PS/2 CLK ever go low?
+    assign led[1] = ps2_valid_seen;    // did we ever decode a full byte?
+    assign led[2] = adsr_gate;         // is gate currently high?
+    assign led[9:3] = ps2_scancode[6:0]; // last received scancode (live)
 
     // Choose note (output inc, adsr_gate)
     logic adsr_gate;

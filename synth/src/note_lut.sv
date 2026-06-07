@@ -13,6 +13,7 @@ module note_lut (
             break_pending <= 0;
             gate <= 0;
             inc  <= 0;
+            current_key <= '0;
         end else if (valid) begin
             if (scancode == 8'hF0) begin
                 break_pending <= 1;         // next byte is a release
