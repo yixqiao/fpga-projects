@@ -1,8 +1,9 @@
 module top (
     input logic clk,
     input logic [9:0] sw,
+    input logic btnC, btnR, btnD,
     input logic PS2Clk, PS2Data,
-    output logic [9:0] led,
+    output logic [15:0] led,
     output logic mclk, bclk, lrclk, sdin
 );
     logic rst;
@@ -22,29 +23,37 @@ module top (
     logic ps2_valid;
     io_ps2_rx ps2 (.clk, .rst, .ps2_clk(PS2Clk), .ps2_data(PS2Data), .scancode(ps2_scancode), .valid(ps2_valid));
 
-    // Sticky latches — stay high once triggered
-    logic ps2_clk_seen, ps2_valid_seen;
-    always_ff @(posedge clk) begin
-        if (rst) begin
-            ps2_clk_seen  <= 0;
-            ps2_valid_seen <= 0;
-        end else begin
-            if (PS2Clk == 0)  ps2_clk_seen  <= 1; // any CLK low = keyboard talking
-            if (ps2_valid)    ps2_valid_seen <= 1;
-        end
-    end
 
-    
-
-    // Choose note (output inc, adsr_gate)
+    // Note recorder (output inc, adsr_gate, leds)
     logic adsr_gate;
-    note_lut note (.clk, .rst, .scancode(ps2_scancode), .valid(ps2_valid), .inc, .gate(adsr_gate));
-    
-    assign led[0] = ps2_clk_seen;      // did PS/2 CLK ever go low?
-    assign led[1] = ps2_valid_seen;    // did we ever decode a full byte?
-    assign led[2] = adsr_gate;         // is gate currently high?
-    assign led[9:3] = ps2_scancode[6:0]; // last received scancode (live)
+    logic pulse_play_stop, pulse_arm, pulse_clear;
+    io_btn_debouncer db_pulse_play_stop(.clk, .rst, .in(btnC), .out(), .pulse_pos(pulse_play_stop), .pulse_neg());
+    io_btn_debouncer db_pulse_arm(.clk, .rst, .in(btnR), .out(), .pulse_pos(pulse_arm), .pulse_neg());
+    io_btn_debouncer db_pulse_clear(.clk, .rst, .in(btnD), .out(), .pulse_pos(pulse_clear), .pulse_neg());
 
+    logic note_tick;
+    clk_divider #(.DIV(12_500_000)) note_div (.clk, .rst, .tick(note_tick));
+
+    logic [7:0] midi_from_keyboard;
+    note_ps2_midi ps2_to_midi(.clk, .rst, .scancode(ps2_scancode), .valid(ps2_valid), .midi(midi_from_keyboard)); // PS2 to midi
+
+    logic [3:0] leds_bar, leds_note, leds_sixteenth;
+
+    note_recorder nr (
+        .clk, .rst,
+        .note_tick,
+        .pulse_play_stop, .pulse_arm, .pulse_clear,
+        .midi_in(midi_from_keyboard), .inc, .gate(adsr_gate),
+        .leds_bar, .leds_note, .leds_sixteenth
+    );
+
+    assign led[15:14] = 2'b0;
+    assign led[13:10] = leds_bar;
+    assign led[9] = 0;
+    assign led[8:5] = leds_note;
+    assign led[4] = 0;
+    assign led[3:0] = leds_sixteenth;
+    
     // Get phase (output phase)
     phase_acc #(.W(24)) nco (
         .clk, .rst,
