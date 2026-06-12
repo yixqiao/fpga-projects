@@ -34,14 +34,16 @@ module top (
         end
     end
 
-    assign led[0] = ps2_clk_seen;      // did PS/2 CLK ever go low?
-    assign led[1] = ps2_valid_seen;    // did we ever decode a full byte?
-    assign led[2] = adsr_gate;         // is gate currently high?
-    assign led[9:3] = ps2_scancode[6:0]; // last received scancode (live)
+    
 
     // Choose note (output inc, adsr_gate)
     logic adsr_gate;
     note_lut note (.clk, .rst, .scancode(ps2_scancode), .valid(ps2_valid), .inc, .gate(adsr_gate));
+    
+    assign led[0] = ps2_clk_seen;      // did PS/2 CLK ever go low?
+    assign led[1] = ps2_valid_seen;    // did we ever decode a full byte?
+    assign led[2] = adsr_gate;         // is gate currently high?
+    assign led[9:3] = ps2_scancode[6:0]; // last received scancode (live)
 
     // Get phase (output phase)
     phase_acc #(.W(24)) nco (

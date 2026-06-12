@@ -25,15 +25,44 @@ module note_lut (
                 end else begin
                     // look up inc from LUT
                     case (scancode)
-                        8'h1C: inc <= 24'h01E9B0; // A  → C4  261.6 Hz
-                        8'h1B: inc <= 24'h0205A0; // S  → D4
-                        8'h23: inc <= 24'h023F00; // D  → E4
-                        8'h2B: inc <= 24'h025A00; // F  → F4
-                        8'h34: inc <= 24'h027F00; // G  → G4
-                        8'h33: inc <= 24'h02BB00; // H  → A4  440 Hz
-                        8'h3B: inc <= 24'h030C00; // J  → B4
-                        8'h42: inc <= 24'h03D360; // K  → C5
-                        default: ; // unknown key, don't change note
+                        8'h12: inc <= 24'h0057CA; // C2
+                        8'h1C: inc <= 24'h005D02; // C#2
+                        8'h1A: inc <= 24'h00628A; // D2
+                        8'h1B: inc <= 24'h006866; // D#2
+                        8'h22: inc <= 24'h006E9B; // E2
+                        8'h21: inc <= 24'h00752F; // F2
+                        8'h2B: inc <= 24'h007C26; // F#2
+                        8'h2A: inc <= 24'h008388; // G2
+                        8'h34: inc <= 24'h008B5A; // G#2
+                        8'h32: inc <= 24'h0093A4; // A2
+                        8'h33: inc <= 24'h009C6B; // A#2
+                        8'h31: inc <= 24'h00A5B8; // B2
+                        8'h3A: inc <= 24'h00AF93; // C3
+                        8'h42: inc <= 24'h00BA04; // C#3
+                        8'h41: inc <= 24'h00C513; // D3
+                        8'h4B: inc <= 24'h00D0CB; // D#3
+                        8'h49: inc <= 24'h00DD36; // E3
+                        8'h4A: inc <= 24'h00EA5D; // F3
+                        8'h52: inc <= 24'h00F84D; // F#3
+                        8'h15: inc <= 24'h010710; // G3
+                        8'h1E: inc <= 24'h0116B5; // G#3
+                        8'h1D: inc <= 24'h012748; // A3
+                        8'h26: inc <= 24'h0138D7; // A#3
+                        8'h24: inc <= 24'h014B71; // B3
+                        8'h2D: inc <= 24'h015F26; // C4
+                        8'h2E: inc <= 24'h017407; // C#4
+                        8'h2C: inc <= 24'h018A27; // D4
+                        8'h36: inc <= 24'h01A197; // D#4
+                        8'h35: inc <= 24'h01BA6B; // E4
+                        8'h3C: inc <= 24'h01D4BA; // F4
+                        8'h3E: inc <= 24'h01F099; // F#4
+                        8'h43: inc <= 24'h020E21; // G4
+                        8'h46: inc <= 24'h022D6A; // G#4
+                        8'h44: inc <= 24'h024E8F; // A4
+                        8'h45: inc <= 24'h0271AD; // A#4
+                        8'h4D: inc <= 24'h0296E1; // B4
+                        8'h54: inc <= 24'h02BE4C; // C5
+                        default: ;
                     endcase
                     current_key <= scancode;
                     gate <= 1;
