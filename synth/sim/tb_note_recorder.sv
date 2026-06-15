@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 module tb_note_recorder;
-    logic clk, rst, note_tick;
+    logic clk, rst, note_tick, sample_tick;
     logic pulse_play_stop, pulse_arm, pulse_clear;
     logic [7:0] midi_in;
     logic [23:0] inc;
@@ -10,7 +10,7 @@ module tb_note_recorder;
 
     // Small RECORD_DELAY so record_tick fits inside the 3-cycle note window
     note_recorder #(.RECORD_DELAY(1)) dut (
-        .clk, .rst, .note_tick,
+        .clk, .rst, .note_tick, .sample_tick,
         .pulse_play_stop, .pulse_arm, .pulse_clear,
         .midi_in, .inc, .gate,
         .leds_bar, .leds_note, .leds_sixteenth

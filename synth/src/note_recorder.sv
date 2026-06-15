@@ -3,11 +3,13 @@ module note_recorder #(
 ) (
     input logic clk, rst,
     input logic note_tick,
+    input logic sample_tick,
     input logic pulse_play_stop, pulse_arm, pulse_clear,
     input logic [7:0] midi_in,
     output logic [23:0] inc,
     output logic gate,
-    output logic [3:0] leds_bar, leds_note, leds_sixteenth
+    output logic [3:0] leds_bar, leds_note, leds_sixteenth,
+    output logic led_state_record
 );    
     localparam STOPPED=0, PLAYING=1;
     localparam IDLE=0, ARMED=1, RECORDING=2;
@@ -23,6 +25,8 @@ module note_recorder #(
     assign leds_bar = {2'b00, current_position[5:4]};
     assign leds_note = 4'b0001 << current_position[3:2];
     assign leds_sixteenth = 4'b0001 << current_position[1:0];
+
+    assign led_state_record = state_record==ARMED ? 1 : (state_record==RECORDING ? !current_position[0] : 0);
 
     logic [$clog2(RECORD_DELAY)-1:0] record_cnt;
     logic record_tick;
@@ -53,7 +57,7 @@ module note_recorder #(
 
     
 
-    note_midi_inc midi_lut (.midi(state_record==RECORDING ? midi_in : note_buf[current_position]), .inc);
+    note_midi_inc midi_lut (.midi((state_record==IDLE || state_record==RECORDING) ? midi_in : note_buf[current_position]), .inc);
 
     integer i;
     always_ff @(posedge clk) begin
@@ -68,16 +72,16 @@ module note_recorder #(
         else begin
             state_play <= next_state_play;
             state_record <= next_state_record;
-            new_note <= 0;
+            if (sample_tick) new_note <= 0;
 
             if (pulse_clear) begin
                 for (i=0; i<64; i++) note_buf[i] <= 8'hFF;
             end
 
             if (state_play == PLAYING) begin
-                if (state_record==RECORDING) begin
+                if (state_record==IDLE || state_record==RECORDING) begin
                     gate <= midi_in != 8'hFF;
-                    if (record_tick) begin 
+                    if (state_record==RECORDING && record_tick) begin 
                         note_buf[current_position] <= midi_in;
                         current_position <= current_position + 1;
                     end

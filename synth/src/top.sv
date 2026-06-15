@@ -38,21 +38,23 @@ module top (
     note_ps2_midi ps2_to_midi(.clk, .rst, .scancode(ps2_scancode), .valid(ps2_valid), .midi(midi_from_keyboard)); // PS2 to midi
 
     logic [3:0] leds_bar, leds_note, leds_sixteenth;
+    logic led_state_record;
 
     note_recorder nr (
         .clk, .rst,
-        .note_tick,
+        .note_tick, .sample_tick,
         .pulse_play_stop, .pulse_arm, .pulse_clear,
         .midi_in(midi_from_keyboard), .inc, .gate(adsr_gate),
-        .leds_bar, .leds_note, .leds_sixteenth
+        .leds_bar, .leds_note, .leds_sixteenth, .led_state_record
     );
 
-    assign led[15:14] = 2'b0;
-    assign led[13:10] = leds_bar;
+    assign led[15] = led_state_record;
+    assign led[14] = 0;
+    assign led[13:10] = {leds_bar[0],leds_bar[1],leds_bar[2],leds_bar[3]};
     assign led[9] = 0;
-    assign led[8:5] = leds_note;
+    assign led[8:5] = {leds_note[0],leds_note[1],leds_note[2],leds_note[3]};
     assign led[4] = 0;
-    assign led[3:0] = leds_sixteenth;
+    assign led[3:0] = {leds_sixteenth[0],leds_sixteenth[1],leds_sixteenth[2],leds_sixteenth[3]};
     
     // Get phase (output phase)
     phase_acc #(.W(24)) nco (
