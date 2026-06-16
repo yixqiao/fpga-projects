@@ -139,7 +139,7 @@ module top (
     // Output to 7seg
     seg7_mux4 seg7 (
         .clk, .rst,
-        .digit3(4'd10), .digit2(4'd10), .digit1(4'd10), .digit0(bar_count), .dps(4'b1101),
+        .digit3(4'd10), .digit2(4'd10), .digit1(4'd10), .digit0(bar_count + 4'd1), .dps(4'b1011),
         .seg, .dp, .an
     );
 endmodule

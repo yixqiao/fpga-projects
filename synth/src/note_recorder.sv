@@ -29,13 +29,12 @@ module note_recorder (
     always_comb begin
         for (int j = 0; j < 16; j++) begin
             unique case (state)
-                EDITING: led[j] = (current_position[3:0] == 4'(15-j))
-                                ? edit_flash
-                                : (note_buf[{current_position[5:4], 4'(15-j)}] != 8'hFF);
                 PLAYING: led[j] = (current_position[3:0] == 4'(15-j))
                                 ? !(note_buf[{current_position[5:4], 4'(15-j)}] != 8'hFF)
                                 :  (note_buf[{current_position[5:4], 4'(15-j)}] != 8'hFF);
-                default: led[j] = note_buf[{current_position[5:4], 4'(15-j)}] != 8'hFF;
+                default: led[j] = (current_position[3:0] == 4'(15-j))
+                                ? edit_flash
+                                : (note_buf[{current_position[5:4], 4'(15-j)}] != 8'hFF); // TODO add a slower idle_flash
             endcase
         end
     end
@@ -46,6 +45,7 @@ module note_recorder (
             IDLE: next_state = pulse_edit ? EDITING : (pulse_play_stop ? PLAYING : IDLE);
             EDITING: next_state = pulse_edit ? IDLE : (pulse_play_stop ? PLAYING : EDITING);
             PLAYING: next_state = pulse_edit ? EDITING : (pulse_play_stop ? IDLE : PLAYING);
+            default: next_state = IDLE;
         endcase
     end
 
@@ -90,7 +90,7 @@ module note_recorder (
                 end
             end
             else begin // Idle
-                current_position <= '0;
+                if (pulse_clear_note) current_position <= '0;
             end
         end
     end

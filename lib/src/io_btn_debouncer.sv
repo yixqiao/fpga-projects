@@ -1,5 +1,5 @@
 module io_btn_debouncer #(
-    parameter LOCKOUT_CYCLES = 100_000  // default 1ms from 100 MHz
+    parameter LOCKOUT_CYCLES = 500_000  // default 5ms from 100 MHz
 )(
     input clk,
     input rst,
