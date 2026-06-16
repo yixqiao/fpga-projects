@@ -15,10 +15,12 @@ module note_recorder #(
     localparam IDLE=0, ARMED=1, RECORDING=2;
 
     logic state_play, next_state_play;
-    logic [1:0] state_record, next_state_record;
+    logic [1:0] state_record, next_state_record; // TODO just one state
 
     logic [5:0] current_position; // Bar/4, 16th note
     logic [7:0] note_buf [0:63];
+
+    logic [23:0] inc_raw, inc_latched;
 
     logic new_note;
 
@@ -49,21 +51,27 @@ module note_recorder #(
 
         case (state_record)
             IDLE: next_state_record = (state_play==PLAYING && pulse_arm) ? ARMED : IDLE;
-            ARMED: next_state_record = (note_tick && current_position=='1) ? RECORDING : ARMED;
-            RECORDING: next_state_record = (record_tick && current_position=='1) ? IDLE : RECORDING;
+            ARMED: next_state_record = (note_tick && current_position=='1 && state_play==PLAYING) ? RECORDING : ARMED;
+            RECORDING: next_state_record = (record_tick && current_position=='1 && state_play==PLAYING) ? IDLE : RECORDING;
             default: next_state_record = IDLE;
         endcase
     end
 
     
 
-    note_midi_inc midi_lut (.midi((state_record==IDLE || state_record==RECORDING) ? midi_in : note_buf[current_position]), .inc);
+    note_midi_inc midi_lut (.midi((state_play==STOPPED || state_record==RECORDING) ? midi_in : note_buf[current_position]), .inc(inc_raw));
+    always_ff @(posedge clk) begin
+        if (rst) inc_latched <= '0;
+        else if (gate) inc_latched <= inc_raw;
+    end
+    assign inc = gate ? inc_raw : inc_latched;
 
     integer i;
     always_ff @(posedge clk) begin
         if (rst) begin
             state_play <= STOPPED;
             state_record <= IDLE;
+
             new_note <= 0;
             gate <= 0;
             current_position <= 0;
@@ -72,6 +80,7 @@ module note_recorder #(
         else begin
             state_play <= next_state_play;
             state_record <= next_state_record;
+
             if (sample_tick) new_note <= 0;
 
             if (pulse_clear) begin
@@ -79,9 +88,9 @@ module note_recorder #(
             end
 
             if (state_play == PLAYING) begin
-                if (state_record==IDLE || state_record==RECORDING) begin
+                if (state_record==RECORDING) begin
                     gate <= midi_in != 8'hFF;
-                    if (state_record==RECORDING && record_tick) begin 
+                    if (record_tick) begin 
                         note_buf[current_position] <= midi_in;
                         current_position <= current_position + 1;
                     end
@@ -96,8 +105,9 @@ module note_recorder #(
             end
             
             else begin
+                // Not playing
                 current_position <= '0;
-                gate <= 0;
+                gate <= midi_in != 8'hFF;
             end
         end
     end

@@ -7,18 +7,22 @@ module tb_note_recorder;
     logic [23:0] inc;
     logic gate;
     logic [3:0] leds_bar, leds_note, leds_sixteenth;
+    logic led_state_record;
 
     // Small RECORD_DELAY so record_tick fits inside the 3-cycle note window
     note_recorder #(.RECORD_DELAY(1)) dut (
         .clk, .rst, .note_tick, .sample_tick,
         .pulse_play_stop, .pulse_arm, .pulse_clear,
         .midi_in, .inc, .gate,
-        .leds_bar, .leds_note, .leds_sixteenth
+        .leds_bar, .leds_note, .leds_sixteenth,
+        .led_state_record
     );
 
     // Clock
     initial clk = 0;
     always #5 clk = ~clk;
+
+    assign sample_tick = 1;
 
     // note_tick every 3 clock cycles, 1-cycle pulse
     integer tick_div;

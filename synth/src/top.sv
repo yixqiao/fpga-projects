@@ -49,7 +49,7 @@ module top (
     );
 
     assign led[15] = led_state_record;
-    assign led[14] = 0;
+    assign led[14] = adsr_gate;
     assign led[13:10] = {leds_bar[0],leds_bar[1],leds_bar[2],leds_bar[3]};
     assign led[9] = 0;
     assign led[8:5] = {leds_note[0],leds_note[1],leds_note[2],leds_note[3]};
