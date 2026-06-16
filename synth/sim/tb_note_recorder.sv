@@ -2,20 +2,18 @@
 
 module tb_note_recorder;
     logic clk, rst, note_tick, sample_tick;
-    logic pulse_play_stop, pulse_arm, pulse_clear;
+    logic pulse_play_stop, pulse_edit, pulse_left, pulse_right, pulse_clear_note;
     logic [7:0] midi_in;
     logic [23:0] inc;
     logic gate;
-    logic [3:0] leds_bar, leds_note, leds_sixteenth;
-    logic led_state_record;
+    logic [15:0] led;
+    logic [3:0] bar_count;
 
-    // Small RECORD_DELAY so record_tick fits inside the 3-cycle note window
-    note_recorder #(.RECORD_DELAY(1)) dut (
+    note_recorder dut (
         .clk, .rst, .note_tick, .sample_tick,
-        .pulse_play_stop, .pulse_arm, .pulse_clear,
+        .pulse_play_stop, .pulse_edit, .pulse_left, .pulse_right, .pulse_clear_note,
         .midi_in, .inc, .gate,
-        .leds_bar, .leds_note, .leds_sixteenth,
-        .led_state_record
+        .led, .bar_count
     );
 
     // Clock
@@ -69,33 +67,54 @@ module tb_note_recorder;
         end
     endtask
 
+    // Pulse one signal high for a single cycle
+    task pulse_right_step;
+        begin
+            @(posedge clk); pulse_right = 1;
+            @(posedge clk); pulse_right = 0;
+        end
+    endtask
+
+    task pulse_clear_step;
+        begin
+            @(posedge clk); pulse_clear_note = 1;
+            @(posedge clk); pulse_clear_note = 0;
+        end
+    endtask
+
+    integer i;
     initial begin
         $dumpfile("sim/tb_note_recorder.vcd");
         $dumpvars(0, tb_note_recorder);
 
         rst = 1;
-        pulse_play_stop = 0; pulse_arm = 0; pulse_clear = 0;
+        pulse_play_stop = 0; pulse_edit = 0;
+        pulse_left = 0; pulse_right = 0; pulse_clear_note = 0;
         repeat(4) @(posedge clk);
         rst = 0;
         repeat(4) @(posedge clk);
 
-        // Start playback (buffer is all rests right now)
+        // Enter EDITING (starts at position 0)
+        @(posedge clk); pulse_edit = 1;
+        @(posedge clk); pulse_edit = 0;
+
+        // Write ~10 steps. Held midi_in gets written to the current position
+        // automatically while in EDITING; clear a couple of steps to make rests.
+        for (i = 0; i < 10; i++) begin
+            wait_ticks(1);              // new pattern value now present + written
+            if (i == 3 || i == 7)       // every so often, clear -> rest
+                pulse_clear_step;
+            pulse_right_step;           // advance to next 16th
+        end
+
+        // Switch to IDLE
+        @(posedge clk); pulse_edit = 1;
+        @(posedge clk); pulse_edit = 0;
+        repeat(10) @(posedge clk);
+
+        // Play back the recorded pattern, loop through twice
         @(posedge clk); pulse_play_stop = 1;
         @(posedge clk); pulse_play_stop = 0;
-
-        // Let it run empty for a few ticks
-        wait_ticks(5);
-
-        // Arm — will enter ARMED, then RECORDING when position wraps to 0
-        @(posedge clk); pulse_arm = 1;
-        @(posedge clk); pulse_arm = 0;
-
-        // Record through the full 4-bar lap (64 steps) plus margin
-        // to cover the count-in wait + the 64 recording steps.
-        wait_ticks(140);
-
-        // Now in IDLE/PLAYING — let the recorded pattern loop through
-        // a couple of times to verify playback + gate retrigger.
         wait_ticks(140);
 
         // Stop

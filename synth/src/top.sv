@@ -1,9 +1,12 @@
 module top (
     input logic clk,
     input logic [9:0] sw,
-    input logic btnC, btnR, btnD,
+    input logic btnC, btnU, btnL, btnR, btnD,
     input logic PS2Clk, PS2Data,
     output logic [15:0] led,
+    output logic [6:0] seg,
+    output logic dp,
+    output logic [3:0] an,
     output logic mclk, bclk, lrclk, sdin
 );
     logic rst;
@@ -26,10 +29,12 @@ module top (
 
     // Note recorder (output inc, adsr_gate, leds)
     logic adsr_gate;
-    logic pulse_play_stop, pulse_arm, pulse_clear;
+    logic pulse_play_stop, pulse_edit, pulse_left, pulse_right, pulse_clear_note;
     io_btn_debouncer db_pulse_play_stop(.clk, .rst, .in(btnC), .out(), .pulse_pos(pulse_play_stop), .pulse_neg());
-    io_btn_debouncer db_pulse_arm(.clk, .rst, .in(btnR), .out(), .pulse_pos(pulse_arm), .pulse_neg());
-    io_btn_debouncer db_pulse_clear(.clk, .rst, .in(btnD), .out(), .pulse_pos(pulse_clear), .pulse_neg());
+    io_btn_debouncer db_pulse_edit(.clk, .rst, .in(btnU), .out(), .pulse_pos(pulse_edit), .pulse_neg());
+    io_btn_debouncer db_pulse_left(.clk, .rst, .in(btnL), .out(), .pulse_pos(pulse_left), .pulse_neg());
+    io_btn_debouncer db_pulse_right(.clk, .rst, .in(btnR), .out(), .pulse_pos(pulse_right), .pulse_neg());
+    io_btn_debouncer db_pulse_clear_note(.clk, .rst, .in(btnD), .out(), .pulse_pos(pulse_clear_note), .pulse_neg());
 
     logic note_tick;
     clk_divider #(.DIV(12_500_000)) note_div (.clk, .rst, .tick(note_tick));
@@ -37,24 +42,15 @@ module top (
     logic [7:0] midi_from_keyboard;
     note_ps2_midi ps2_to_midi(.clk, .rst, .scancode(ps2_scancode), .valid(ps2_valid), .midi(midi_from_keyboard)); // PS2 to midi
 
-    logic [3:0] leds_bar, leds_note, leds_sixteenth;
-    logic led_state_record;
+    logic [3:0] bar_count;
 
     note_recorder nr (
         .clk, .rst,
         .note_tick, .sample_tick,
-        .pulse_play_stop, .pulse_arm, .pulse_clear,
+        .pulse_play_stop, .pulse_edit, .pulse_left, .pulse_right, .pulse_clear_note,
         .midi_in(midi_from_keyboard), .inc, .gate(adsr_gate),
-        .leds_bar, .leds_note, .leds_sixteenth, .led_state_record
+        .led, .bar_count
     );
-
-    assign led[15] = led_state_record;
-    assign led[14] = adsr_gate;
-    assign led[13:10] = {leds_bar[0],leds_bar[1],leds_bar[2],leds_bar[3]};
-    assign led[9] = 0;
-    assign led[8:5] = {leds_note[0],leds_note[1],leds_note[2],leds_note[3]};
-    assign led[4] = 0;
-    assign led[3:0] = {leds_sixteenth[0],leds_sixteenth[1],leds_sixteenth[2],leds_sixteenth[3]};
     
     // Get phase (output phase)
     phase_acc #(.W(24)) nco (
@@ -76,6 +72,7 @@ module top (
     logic signed [23:0] s1_reg;
     logic signed [12:0] env_reg;
     logic signed [36:0] mult_reg;
+
     // TODO move envelope multiply into a separate module
     (* use_dsp48 = "yes" *)
     always_ff @(posedge clk) begin
@@ -136,5 +133,13 @@ module top (
         .left(sample_vol), .right(sample_vol),
         .sample_req(sample_tick),
         .mclk, .bclk, .lrclk, .sdin
+    );
+
+
+    // Output to 7seg
+    seg7_mux4 seg7 (
+        .clk, .rst,
+        .digit3(4'd10), .digit2(4'd10), .digit1(4'd10), .digit0(bar_count), .dps(4'b1101),
+        .seg, .dp, .an
     );
 endmodule
