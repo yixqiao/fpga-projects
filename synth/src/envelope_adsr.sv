@@ -18,7 +18,7 @@ module envelope_adsr (
     assign a_shift = sel_a ? 5'd10 : 5'd5;
     assign d_shift = sel_d ? 5'd10 : 5'd8;
     assign s_level = sel_s ? 12'h600: 12'h100;
-    assign r_shift = sel_r ? 5'd11 : 5'd7;
+    assign r_shift = sel_r ? 5'd10 : 5'd7;
 
     logic [11:0] attack_delta, decay_delta, release_delta;
     assign attack_delta  = (ENV_MAX - env_level) >> a_shift;

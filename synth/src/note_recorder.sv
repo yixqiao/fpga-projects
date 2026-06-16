@@ -24,7 +24,7 @@ module note_recorder #(
 
     logic new_note;
 
-    assign leds_bar = {2'b00, current_position[5:4]};
+    assign leds_bar = 4'b0001 << current_position[5:4];
     assign leds_note = 4'b0001 << current_position[3:2];
     assign leds_sixteenth = 4'b0001 << current_position[1:0];
 
@@ -62,7 +62,7 @@ module note_recorder #(
     note_midi_inc midi_lut (.midi((state_play==STOPPED || state_record==RECORDING) ? midi_in : note_buf[current_position]), .inc(inc_raw));
     always_ff @(posedge clk) begin
         if (rst) inc_latched <= '0;
-        else if (gate) inc_latched <= inc_raw;
+        else if (inc_raw != 24'h000000) inc_latched <= inc_raw;
     end
     assign inc = gate ? inc_raw : inc_latched;
 
