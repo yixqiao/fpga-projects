@@ -3,7 +3,7 @@
 module tb_note_recorder;
     logic clk, rst, note_tick, sample_tick;
     logic pulse_play_stop, pulse_edit, pulse_left, pulse_right, pulse_clear_note;
-    logic [7:0] midi_in;
+    logic [7:0] midi_in, midi_out;
     logic [23:0] inc;
     logic gate;
     logic [15:0] led;
@@ -12,7 +12,7 @@ module tb_note_recorder;
     note_recorder dut (
         .clk, .rst, .note_tick, .sample_tick,
         .pulse_play_stop, .pulse_edit, .pulse_left, .pulse_right,
-        .midi_in, .inc, .gate,
+        .midi_in, .midi_out,
         .led, .bar_count
     );
 

@@ -78,16 +78,27 @@ module top (
 
     logic [3:0] bar_count;
 
+    logic [7:0] midi_final;
+
     note_recorder nr (
         .clk, .rst,
         .note_tick, .sample_tick,
         .pulse_play_stop, .pulse_edit, .pulse_left(is_editing && rotary_pulse_neg), .pulse_right(is_editing && rotary_pulse_pos),
         .sw_clear_reset(btn_clear_reset),
         .pulse_bar_left, .pulse_bar_right,
-        .midi_in(midi_from_keyboard), .inc, .gate(adsr_gate),
+        .midi_in(midi_from_keyboard), .midi_out(midi_final),
         .led, .bar_count,
         .is_editing
     );
+
+    logic [23:0] inc_raw, inc_latched;
+    note_midi_inc inc_default (.midi(midi_final), .detune(2'b00), .inc(inc_raw));
+
+    always_ff @(posedge clk) begin
+        if (rst) inc_latched <= '0;
+        else if (inc_raw != 24'h000000) inc_latched <= inc_raw;
+    end
+    assign inc = inc_latched;
     
     // Get phase (output phase)
     phase_acc #(.W(24)) nco (

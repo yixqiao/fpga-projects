@@ -5,8 +5,7 @@ module note_recorder (
     input logic pulse_play_stop, pulse_edit, pulse_left, pulse_right, sw_clear_reset,
     input logic pulse_bar_left, pulse_bar_right,
     input logic [7:0] midi_in,
-    output logic [23:0] inc,
-    output logic gate,
+    output logic [7:0] midi_out,
     output logic [15:0] led,
     output logic [3:0] bar_count,
     output logic is_editing
@@ -60,16 +59,10 @@ module note_recorder (
     // Editing: pass through keyboard
     // Playing: read from note_buf
 
-    note_midi_inc midi_lut (.midi((state==PLAYING) ? note_buf[current_position] : midi_in), .inc(inc_raw));
     always_ff @(posedge clk) begin
-        if (rst) inc_latched <= '0;
-        else if (inc_raw != 24'h000000) inc_latched <= inc_raw;
-    end
-    assign inc = gate ? inc_raw : inc_latched;
-    
-    always_ff @(posedge clk) begin
-        if (rst) gate <= 0;
-        else gate <= (state==PLAYING) ? (note_buf[current_position]!=8'hFF && !new_note) : (midi_in!=8'hFF);
+        if (rst) midi_out <= 8'hFF;
+        else if (state==PLAYING) midi_out <= new_note ? 8'hFF : note_buf[current_position];
+        else midi_out <= midi_in;
     end
 
     always_ff @(posedge clk) begin
