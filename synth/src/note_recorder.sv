@@ -87,6 +87,7 @@ module note_recorder (
                 end
             end
             else if (state == PLAYING) begin
+                if (pulse_clear_note) current_position <= '0;
                 if (note_tick) begin
                     if (note_buf[current_position + 1] != note_buf[current_position]) new_note <= 1;
                     current_position <= current_position + 1;

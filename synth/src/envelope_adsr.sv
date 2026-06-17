@@ -25,7 +25,7 @@ module envelope_adsr (
         pulse_end = !gate & gate_prev;
         case (state)
             IDLE: next_state = pulse_start ? ATTACK : IDLE;
-            ATTACK: next_state = pulse_end ? RELEASE : (attack_delta==0 ? DECAY : ATTACK);
+            ATTACK: next_state = pulse_end ? RELEASE : (env_level>=ENV_MAX ? DECAY : ATTACK); // Switch back to attack_delta==0
             DECAY: next_state = pulse_end ? RELEASE : (decay_delta==0 ? SUSTAIN : DECAY);
             SUSTAIN: next_state = pulse_end ? RELEASE : SUSTAIN;
             RELEASE: next_state = pulse_start ? ATTACK : (release_delta==0 ? IDLE : RELEASE);
@@ -48,7 +48,7 @@ module envelope_adsr (
             if (tick_cnt == 0) begin
                 case (state)
                     IDLE: env_level <= (env_level <= LEAK_DELTA) ? '0 : env_level - LEAK_DELTA;
-                    ATTACK: env_level <= env_level + attack_delta;
+                    ATTACK: env_level <= (attack_delta == 0) ? env_level + LEAK_DELTA : env_level + attack_delta;
                     DECAY: env_level <= env_level - decay_delta;
                     SUSTAIN: env_level <= (env_level <= s_level || env_level-s_level <= LEAK_DELTA) ? s_level : env_level - LEAK_DELTA;
                     RELEASE: env_level <= env_level - release_delta;

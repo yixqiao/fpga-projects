@@ -17,7 +17,7 @@ module control_params(
     output logic [3:0] digit_value
 );
     localparam INVALID_P=0, WAVE_SEL_P=1, VOL_SHIFT_P=2, VOL_A_SHIFT_P=3, VOL_D_SHIFT_P=4, VOL_R_SHIFT_P=5, VOL_S_LEVEL_P=6;
-    localparam GLOBAL_VOL_SHIFT = 8;
+    localparam GLOBAL_VOL_SHIFT_P = 8;
     logic [4:0] current_param;
 
     logic mode_sw;
@@ -29,13 +29,13 @@ module control_params(
 
     always_comb begin
         case ({mode_sw, category_sw, param_sw})
-            6'b0_00_000: current_param = WAVE_SEL_P;
-            6'b0_00_001: current_param = VOL_SHIFT_P;
-            6'b0_00_100: current_param = VOL_A_SHIFT_P;
-            6'b0_00_101: current_param = VOL_D_SHIFT_P;
-            6'b0_00_110: current_param = VOL_R_SHIFT_P;
-            6'b0_00_111: current_param = VOL_S_LEVEL_P;
-            6'b1_00_000: current_param = GLOBAL_VOL_SHIFT;
+            7'b0_00_0000: current_param = WAVE_SEL_P;
+            7'b0_00_0001: current_param = VOL_SHIFT_P;
+            7'b0_00_0100: current_param = VOL_A_SHIFT_P;
+            7'b0_00_0101: current_param = VOL_D_SHIFT_P;
+            7'b0_00_0110: current_param = VOL_R_SHIFT_P;
+            7'b0_00_0111: current_param = VOL_S_LEVEL_P;
+            7'b1_00_0000: current_param = GLOBAL_VOL_SHIFT_P;
             default: current_param = INVALID_P;
         endcase
     end
@@ -85,8 +85,8 @@ module control_params(
             3'd1: vol_a_shift = 5'd4;
             3'd2: vol_a_shift = 5'd5;
             3'd3: vol_a_shift = 5'd6;
-            3'd4: vol_a_shift = 5'd8;
-            3'd5: vol_a_shift = 5'd9;
+            3'd4: vol_a_shift = 5'd7;
+            3'd5: vol_a_shift = 5'd8;
             3'd6: vol_a_shift = 5'd10;
             3'd7: vol_a_shift = 5'd12;
         endcase
