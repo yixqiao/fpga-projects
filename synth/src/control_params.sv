@@ -7,11 +7,11 @@ module control_params(
     output logic [2:0] vol_shift,
     output logic [4:0] vol_a_shift, vol_d_shift, vol_r_shift,
     output logic [11:0] vol_s_level,
-    // output logic [15:0] filter_F_floor,
-    // output logic [15:0] filter_k,
-    // output logic [15:0] filter_F_env_amount,
-    // output logic [4:0] filter_a_shift, filter_d_shift, filter_r_shift,
-    // output logic [11:0] filter_s_level,
+    output logic signed [15:0] filter_F_floor,
+    output logic signed [15:0] filter_k,
+    output logic signed [15:0] filter_F_env_amount,
+    output logic [4:0] filter_a_shift, filter_d_shift, filter_r_shift,
+    output logic [11:0] filter_s_level,
 
     output logic [2:0] global_vol_shift,
     output logic [3:0] digit_value
@@ -164,6 +164,153 @@ module control_params(
     end
 
     // ------------------------------------------------------------
+    // Filter F floor
+    logic [2:0] filter_F_floor_c;
+    lib_saturating_counter #(.WIDTH(3), .MAX_CNT(7), .DEFAULT(3)) filter_F_floor_cnt (
+        .clk, .rst,
+        .tick_pos(rotary_pulse_pos && current_param==FILTER_F_FLOOR_P), .tick_neg(rotary_pulse_neg && current_param==FILTER_F_FLOOR_P),
+        .digit(filter_F_floor_c)
+    );
+    always_comb begin
+        case (filter_F_floor_c)
+            3'd0: filter_F_floor = 16'sh0200;
+            3'd1: filter_F_floor = 16'sh0600;
+            3'd2: filter_F_floor = 16'sh0A00;
+            3'd3: filter_F_floor = 16'sh0C00;
+            3'd4: filter_F_floor = 16'sh1000;
+            3'd5: filter_F_floor = 16'sh2000;
+            3'd6: filter_F_floor = 16'sh4000;
+            3'd7: filter_F_floor = 16'shC000;
+        endcase
+    end
+
+    // ------------------------------------------------------------
+    // Filter K (Q)
+    logic [2:0] filter_k_c;
+    lib_saturating_counter #(.WIDTH(3), .MAX_CNT(7), .DEFAULT(3)) filter_k_cnt (
+        .clk, .rst,
+        .tick_pos(rotary_pulse_pos && current_param==FILTER_K_P), .tick_neg(rotary_pulse_neg && current_param==FILTER_K_P),
+        .digit(filter_k_c)
+    );
+    always_comb begin
+        case (filter_k_c)
+            3'd0: filter_k = 16'sh0000;
+            3'd1: filter_k = 16'sh2000;
+            3'd2: filter_k = 16'sh3000;
+            3'd3: filter_k = 16'sh4000;
+            3'd4: filter_k = 16'sh5000;
+            3'd5: filter_k = 16'sh6000;
+            3'd6: filter_k = 16'sh8000;
+            3'd7: filter_k = 16'shA000;
+        endcase
+    end
+
+    // ------------------------------------------------------------
+    // Filter envelope mod amount
+    logic [2:0] filter_F_env_amount_c;
+    lib_saturating_counter #(.WIDTH(3), .MAX_CNT(7), .DEFAULT(3)) filter_F_env_amount_cnt (
+        .clk, .rst,
+        .tick_pos(rotary_pulse_pos && current_param==FILTER_F_ENV_AMOUNT_P), .tick_neg(rotary_pulse_neg && current_param==FILTER_F_ENV_AMOUNT_P),
+        .digit(filter_F_env_amount_c)
+    );
+    always_comb begin
+        case (filter_F_env_amount_c)
+            3'd0: filter_F_env_amount = 16'sh0000;
+            3'd1: filter_F_env_amount = 16'sh0400;
+            3'd2: filter_F_env_amount = 16'sh0800;
+            3'd3: filter_F_env_amount = 16'sh1000;
+            3'd4: filter_F_env_amount = 16'sh2000;
+            3'd5: filter_F_env_amount = 16'sh4000;
+            3'd6: filter_F_env_amount = 16'sh6000;
+            3'd7: filter_F_env_amount = 16'sh8000;
+        endcase
+    end
+
+    // ------------------------------------------------------------
+    // Filter attack
+    logic [2:0] filter_a_shift_c;
+    lib_saturating_counter #(.WIDTH(3), .MAX_CNT(7), .DEFAULT(3)) filter_a_shift_cnt (
+        .clk, .rst,
+        .tick_pos(rotary_pulse_pos && current_param==FILTER_A_SHIFT_P), .tick_neg(rotary_pulse_neg && current_param==FILTER_A_SHIFT_P),
+        .digit(filter_a_shift_c)
+    );
+    always_comb begin
+        case (filter_a_shift_c)
+            3'd0: filter_a_shift = 5'd2;
+            3'd1: filter_a_shift = 5'd4;
+            3'd2: filter_a_shift = 5'd5;
+            3'd3: filter_a_shift = 5'd6;
+            3'd4: filter_a_shift = 5'd7;
+            3'd5: filter_a_shift = 5'd8;
+            3'd6: filter_a_shift = 5'd10;
+            3'd7: filter_a_shift = 5'd12;
+        endcase
+    end
+
+    // ------------------------------------------------------------
+    // Filter decay
+    logic [2:0] filter_d_shift_c;
+    lib_saturating_counter #(.WIDTH(3), .MAX_CNT(7), .DEFAULT(3)) filter_d_shift_cnt (
+        .clk, .rst,
+        .tick_pos(rotary_pulse_pos && current_param==FILTER_D_SHIFT_P), .tick_neg(rotary_pulse_neg && current_param==FILTER_D_SHIFT_P),
+        .digit(filter_d_shift_c)
+    );
+    always_comb begin
+        case (filter_d_shift_c)
+            3'd0: filter_d_shift = 5'd4;
+            3'd1: filter_d_shift = 5'd6;
+            3'd2: filter_d_shift = 5'd7;
+            3'd3: filter_d_shift = 5'd8;
+            3'd4: filter_d_shift = 5'd9;
+            3'd5: filter_d_shift = 5'd10;
+            3'd6: filter_d_shift = 5'd11;
+            3'd7: filter_d_shift = 5'd12;
+        endcase
+    end
+
+    // ------------------------------------------------------------
+    // Filter release
+    logic [2:0] filter_r_shift_c;
+    lib_saturating_counter #(.WIDTH(3), .MAX_CNT(7), .DEFAULT(3)) filter_r_shift_cnt (
+        .clk, .rst,
+        .tick_pos(rotary_pulse_pos && current_param==FILTER_R_SHIFT_P), .tick_neg(rotary_pulse_neg && current_param==FILTER_R_SHIFT_P),
+        .digit(filter_r_shift_c)
+    );
+    always_comb begin
+        case (filter_r_shift_c)
+            3'd0: filter_r_shift = 5'd3;
+            3'd1: filter_r_shift = 5'd5;
+            3'd2: filter_r_shift = 5'd7;
+            3'd3: filter_r_shift = 5'd8;
+            3'd4: filter_r_shift = 5'd9;
+            3'd5: filter_r_shift = 5'd10;
+            3'd6: filter_r_shift = 5'd11;
+            3'd7: filter_r_shift = 5'd12;
+        endcase
+    end
+
+    // ------------------------------------------------------------
+    // Filter sustain
+    logic [2:0] filter_s_level_c;
+    lib_saturating_counter #(.WIDTH(3), .MAX_CNT(7), .DEFAULT(3)) filter_s_level_cnt (
+        .clk, .rst,
+        .tick_pos(rotary_pulse_pos && current_param==FILTER_S_LEVEL_P), .tick_neg(rotary_pulse_neg && current_param==FILTER_S_LEVEL_P),
+        .digit(filter_s_level_c)
+    );
+    always_comb begin
+        case (filter_s_level_c)
+            3'd0: filter_s_level = 12'h000;
+            3'd1: filter_s_level = 12'h100;
+            3'd2: filter_s_level = 12'h200;
+            3'd3: filter_s_level = 12'h400;
+            3'd4: filter_s_level = 12'h600;
+            3'd5: filter_s_level = 12'h800;
+            3'd6: filter_s_level = 12'hC00;
+            3'd7: filter_s_level = 12'hF00;
+        endcase
+    end
+
+    // ------------------------------------------------------------
     // Global volume
     logic [2:0] global_vol_shift_c;
     lib_saturating_counter #(.WIDTH(3), .MAX_CNT(7), .DEFAULT(5)) global_vol_shift_cnt (
@@ -194,6 +341,13 @@ module control_params(
             VOL_D_SHIFT_P: digit_value = {1'b0, vol_d_shift_c};
             VOL_R_SHIFT_P: digit_value = {1'b0, vol_r_shift_c};
             VOL_S_LEVEL_P: digit_value = {1'b0, vol_s_level_c};
+            FILTER_F_FLOOR_P: digit_value = {1'b0, filter_F_floor_c};
+            FILTER_K_P: digit_value = {1'b0, filter_k_c};
+            FILTER_F_ENV_AMOUNT_P: digit_value = {1'b0, filter_F_env_amount_c};
+            FILTER_A_SHIFT_P: digit_value = {1'b0, filter_a_shift_c};
+            FILTER_D_SHIFT_P: digit_value = {1'b0, filter_d_shift_c};
+            FILTER_R_SHIFT_P: digit_value = {1'b0, filter_r_shift_c};
+            FILTER_S_LEVEL_P: digit_value = {1'b0, filter_s_level_c};
             GLOBAL_VOL_SHIFT_P: digit_value = {1'b0, global_vol_shift_c};
             default: digit_value = 4'd10;
         endcase

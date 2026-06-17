@@ -35,6 +35,11 @@ module top (
     logic [2:0] vol_shift;
     logic [4:0] vol_a_shift, vol_d_shift, vol_r_shift;
     logic [11:0] vol_s_level;
+    logic [15:0] filter_F_floor;
+    logic [15:0] filter_k;
+    logic [15:0] filter_F_env_amount;
+    logic [4:0] filter_a_shift, filter_d_shift, filter_r_shift;
+    logic [11:0] filter_s_level;
 
     logic [2:0] global_vol_shift;
 
@@ -47,6 +52,8 @@ module top (
         .wave_sel,
         .vol_shift, .vol_a_shift, .vol_d_shift, .vol_r_shift,
         .vol_s_level,
+        .filter_F_floor, .filter_k, .filter_F_env_amount,
+        .filter_a_shift, .filter_d_shift, .filter_r_shift, .filter_s_level,
         .global_vol_shift,
         .digit_value(control_digit_value)
     );
@@ -93,7 +100,7 @@ module top (
         .clk, .rst, .gate(adsr_gate), .sample_tick,
         .a_shift(vol_a_shift), .d_shift(vol_d_shift), .r_shift(vol_r_shift), .s_level(vol_s_level),
         .env_level
-        );
+    );
     
     logic signed [23:0] s1_reg;
     logic signed [12:0] env_reg;
@@ -114,12 +121,19 @@ module top (
     end
 
     // Filter envelope (output F)
+    logic [11:0] filter_env_level;
+    envelope_adsr fitler_env_adsr (
+        .clk, .rst, .gate(adsr_gate), .sample_tick,
+        .a_shift(filter_a_shift), .d_shift(filter_d_shift), .r_shift(filter_r_shift), .s_level(filter_s_level),
+        .env_level(filter_env_level)
+    );
+
     logic signed [15:0] f_mod_reg;    // AREG: mod cutoff
-    logic signed [12:0] env_f_reg;     // BREG: zero-extended env_level
+    logic signed [12:0] env_f_reg;     // BREG: zero-extended filter_env_level
     logic signed [28:0] f_mult_reg;    // MREG: 16+13 = 28-bit product
     logic signed [15:0] F;             // PREG: final F after scale-back
     logic signed [15:0] f_floor;
-    assign f_floor = 16'sh1000;
+    assign f_floor = filter_F_floor;
 
     (* use_dsp48 = "yes" *)
     always_ff @(posedge clk) begin
@@ -129,8 +143,8 @@ module top (
             f_mult_reg <= '0;
             F          <= '0;
         end else begin
-            f_mod_reg <= 16'sh4000;  // AREG
-            env_f_reg  <= $signed({1'b0, env_level});       // BREG: unsigned→signed
+            f_mod_reg <= filter_F_env_amount;  // AREG
+            env_f_reg  <= $signed({1'b0, filter_env_level});       // BREG: unsigned→signed
             f_mult_reg <= f_mod_reg * env_f_reg;           // MREG
             F          <= (f_mult_reg >>> 12);                // PREG
         end
@@ -141,7 +155,7 @@ module top (
     // Right shift by two before filter
     audio_svf svf (
         .clk, .rst, .sample_tick,
-        .sample_in($signed(sample_env) >>> 2), .F(F + f_floor), .k(16'sh3800), .filt_sel(2'b00),
+        .sample_in($signed(sample_env) >>> 2), .F(F + f_floor), .k(filter_k), .filt_sel(2'b00),
         .sample_out(sample_svf)
     );
 
