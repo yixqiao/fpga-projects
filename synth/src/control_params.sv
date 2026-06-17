@@ -96,7 +96,7 @@ module control_params(
             3'd4: vol_a_shift = 5'd7;
             3'd5: vol_a_shift = 5'd8;
             3'd6: vol_a_shift = 5'd10;
-            3'd7: vol_a_shift = 5'd12;
+            3'd7: vol_a_shift = 5'd11;
         endcase
     end
 
@@ -111,13 +111,13 @@ module control_params(
     always_comb begin
         case (vol_d_shift_c)
             3'd0: vol_d_shift = 5'd4;
-            3'd1: vol_d_shift = 5'd6;
-            3'd2: vol_d_shift = 5'd7;
-            3'd3: vol_d_shift = 5'd8;
-            3'd4: vol_d_shift = 5'd9;
-            3'd5: vol_d_shift = 5'd10;
-            3'd6: vol_d_shift = 5'd11;
-            3'd7: vol_d_shift = 5'd12;
+            3'd1: vol_d_shift = 5'd5;
+            3'd2: vol_d_shift = 5'd6;
+            3'd3: vol_d_shift = 5'd7;
+            3'd4: vol_d_shift = 5'd8;
+            3'd5: vol_d_shift = 5'd9;
+            3'd6: vol_d_shift = 5'd10;
+            3'd7: vol_d_shift = 5'd11;
         endcase
     end
 
@@ -131,14 +131,14 @@ module control_params(
     );
     always_comb begin
         case (vol_r_shift_c)
-            3'd0: vol_r_shift = 5'd3;
+            3'd0: vol_r_shift = 5'd4;
             3'd1: vol_r_shift = 5'd5;
-            3'd2: vol_r_shift = 5'd7;
-            3'd3: vol_r_shift = 5'd8;
-            3'd4: vol_r_shift = 5'd9;
-            3'd5: vol_r_shift = 5'd10;
-            3'd6: vol_r_shift = 5'd11;
-            3'd7: vol_r_shift = 5'd12;
+            3'd2: vol_r_shift = 5'd6;
+            3'd3: vol_r_shift = 5'd7;
+            3'd4: vol_r_shift = 5'd8;
+            3'd5: vol_r_shift = 5'd9;
+            3'd6: vol_r_shift = 5'd10;
+            3'd7: vol_r_shift = 5'd11;
         endcase
     end
 
