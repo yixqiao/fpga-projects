@@ -34,6 +34,7 @@ module top (
     io_rotary_decoder rot_dec (.clk, .rst, .enc_a, .enc_b, .pulse_pos(rotary_pulse_pos), .pulse_neg(rotary_pulse_neg));
 
     logic [1:0] wave_sel;
+    logic detune_sel;
     logic [2:0] vol_shift;
     logic [4:0] vol_a_shift, vol_d_shift, vol_r_shift;
     logic [11:0] vol_s_level;
@@ -51,7 +52,7 @@ module top (
         .clk, .rst,
         .sw,
         .rotary_pulse_pos(!is_editing && rotary_pulse_pos), .rotary_pulse_neg(!is_editing && rotary_pulse_neg),
-        .wave_sel,
+        .wave_sel, .detune_sel,
         .vol_shift, .vol_a_shift, .vol_d_shift, .vol_r_shift,
         .vol_s_level,
         .filter_F_floor, .filter_k, .filter_F_env_amount,
@@ -73,8 +74,16 @@ module top (
     logic note_tick;
     clk_divider #(.DIV(12_500_000)) note_div (.clk, .rst, .tick(note_tick));
 
-    logic [7:0] midi_from_keyboard;
-    note_ps2_midi ps2_to_midi(.clk, .rst, .scancode(ps2_scancode), .valid(ps2_valid), .midi(midi_from_keyboard)); // PS2 to midi
+    logic [7:0] midi_from_keyboard, midi_from_keyboard_raw;
+    note_ps2_midi ps2_to_midi(.clk, .rst, .scancode(ps2_scancode), .valid(ps2_valid), .midi(midi_from_keyboard_raw)); // PS2 to midi
+    always_comb begin
+        case (sw[1:0])
+            2'b00: midi_from_keyboard = midi_from_keyboard_raw - 12;
+            2'b01: midi_from_keyboard = midi_from_keyboard_raw;
+            2'b10: midi_from_keyboard = midi_from_keyboard_raw + 12;
+            2'b11: midi_from_keyboard = midi_from_keyboard_raw + 24;
+        endcase
+    end
 
     logic [3:0] bar_count;
 
@@ -112,7 +121,7 @@ module top (
         else if (inc_raw_higher != 24'h000000) inc_latched_higher <= inc_raw_higher;
     end
 
-    
+
     assign adsr_gate = midi_final != 8'hFF;
     
     // Get phase (output phase)
@@ -140,7 +149,10 @@ module top (
     waveform_gen wave_gen_lower (.phase(phase_lower), .wave_sel, .sample(sample_wave_lower));
     waveform_gen wave_gen_higher (.phase(phase_higher), .wave_sel, .sample(sample_wave_higher));
 
-    assign sample_wave_detune = $signed(sample_wave)>>>1 + $signed(sample_wave_lower)>>>2 + $signed(sample_wave_higher)>>>2;
+    always_comb begin
+        if (detune_sel) sample_wave_detune = $signed(sample_wave)>>>1 + $signed(sample_wave_lower)>>>2 + $signed(sample_wave_higher)>>>2;
+        else sample_wave_detune = $signed(sample_wave)>>>1;
+    end
     
     
     // Envelope (output sample_env)

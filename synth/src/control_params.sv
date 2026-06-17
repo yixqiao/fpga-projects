@@ -3,8 +3,9 @@ module control_params(
     input logic [15:0] sw,
     input logic rotary_pulse_pos, rotary_pulse_neg,
 
-    output logic [1:0] wave_sel,
     output logic [2:0] vol_shift,
+    output logic [1:0] wave_sel,
+    output logic detune_sel,
     output logic [4:0] vol_a_shift, vol_d_shift, vol_r_shift,
     output logic [11:0] vol_s_level,
     output logic signed [15:0] filter_F_floor,
@@ -16,7 +17,7 @@ module control_params(
     output logic [2:0] global_vol_shift,
     output logic [3:0] digit_value
 );
-    localparam INVALID_P=0, WAVE_SEL_P=1, VOL_SHIFT_P=2, VOL_A_SHIFT_P=3, VOL_D_SHIFT_P=4, VOL_R_SHIFT_P=5, VOL_S_LEVEL_P=6;
+    localparam INVALID_P=0, VOL_SHIFT_P=1, WAVE_SEL_P=2, DETUNE_SEL_P=3, VOL_A_SHIFT_P=4, VOL_D_SHIFT_P=5, VOL_R_SHIFT_P=6, VOL_S_LEVEL_P=7;
     localparam FILTER_F_FLOOR_P=8, FILTER_K_P=9, FILTER_F_ENV_AMOUNT_P=10, FILTER_A_SHIFT_P=11, FILTER_D_SHIFT_P=12, FILTER_R_SHIFT_P=13, FILTER_S_LEVEL_P=14;
     localparam GLOBAL_VOL_SHIFT_P = 15;
     logic [4:0] current_param;
@@ -30,8 +31,9 @@ module control_params(
 
     always_comb begin
         case ({mode_sw, category_sw, param_sw})
-            7'b0_00_0000: current_param = WAVE_SEL_P;
-            7'b0_00_0001: current_param = VOL_SHIFT_P;
+            7'b0_00_0000: current_param = VOL_SHIFT_P;
+            7'b0_00_0001: current_param = WAVE_SEL_P;
+            7'b0_00_0010: current_param = DETUNE_SEL_P;
             7'b0_00_0100: current_param = VOL_A_SHIFT_P;
             7'b0_00_0101: current_param = VOL_D_SHIFT_P;
             7'b0_00_0110: current_param = VOL_R_SHIFT_P;
@@ -47,16 +49,6 @@ module control_params(
             default: current_param = INVALID_P;
         endcase
     end
-
-    // ------------------------------------------------------------
-    // Waveform selection
-    logic [1:0] wave_sel_c;
-    lib_saturating_counter #(.WIDTH(2), .MAX_CNT(3), .DEFAULT(0)) wave_sel_cnt (
-        .clk, .rst,
-        .tick_pos(rotary_pulse_pos && current_param==WAVE_SEL_P), .tick_neg(rotary_pulse_neg && current_param==WAVE_SEL_P),
-        .digit(wave_sel_c)
-    );
-    assign wave_sel = wave_sel_c;
 
     // ------------------------------------------------------------
     // Voice volume
@@ -78,6 +70,26 @@ module control_params(
             3'd7: vol_shift = 0;
         endcase
     end
+
+    // ------------------------------------------------------------
+    // Waveform selection
+    logic [1:0] wave_sel_c;
+    lib_saturating_counter #(.WIDTH(2), .MAX_CNT(3), .DEFAULT(0)) wave_sel_cnt (
+        .clk, .rst,
+        .tick_pos(rotary_pulse_pos && current_param==WAVE_SEL_P), .tick_neg(rotary_pulse_neg && current_param==WAVE_SEL_P),
+        .digit(wave_sel_c)
+    );
+    assign wave_sel = wave_sel_c;
+
+    // ------------------------------------------------------------
+    // Detune selection
+    logic [1:0] detune_sel_c;
+    lib_saturating_counter #(.WIDTH(1), .MAX_CNT(1), .DEFAULT(0)) detune_sel_cnt (
+        .clk, .rst,
+        .tick_pos(rotary_pulse_pos && current_param==DETUNE_SEL_P), .tick_neg(rotary_pulse_neg && current_param==DETUNE_SEL_P),
+        .digit(detune_sel_c)
+    );
+    assign detune_sel = detune_sel_c;
     
     // ------------------------------------------------------------
     // Envelope attack
@@ -313,7 +325,7 @@ module control_params(
     // ------------------------------------------------------------
     // Global volume
     logic [2:0] global_vol_shift_c;
-    lib_saturating_counter #(.WIDTH(3), .MAX_CNT(7), .DEFAULT(5)) global_vol_shift_cnt (
+    lib_saturating_counter #(.WIDTH(3), .MAX_CNT(7), .DEFAULT(6)) global_vol_shift_cnt (
         .clk, .rst,
         .tick_pos(rotary_pulse_pos && current_param==GLOBAL_VOL_SHIFT_P), .tick_neg(rotary_pulse_neg && current_param==GLOBAL_VOL_SHIFT_P),
         .digit(global_vol_shift_c)
@@ -335,8 +347,9 @@ module control_params(
     // 7seg display
     always_comb begin
         case (current_param)
-            WAVE_SEL_P: digit_value = {2'b0, wave_sel_c};
             VOL_SHIFT_P: digit_value = {1'b0, vol_shift_c};
+            WAVE_SEL_P: digit_value = {2'b0, wave_sel_c};
+            DETUNE_SEL_P: digit_value = {3'b0, detune_sel_c};
             VOL_A_SHIFT_P: digit_value = {1'b0, vol_a_shift_c};
             VOL_D_SHIFT_P: digit_value = {1'b0, vol_d_shift_c};
             VOL_R_SHIFT_P: digit_value = {1'b0, vol_r_shift_c};
