@@ -4,7 +4,7 @@ module voice (
     // Params
     input logic [1:0] wave_sel,
     input logic detune_sel,
-    input logic [2:0] vol_shift,
+    input logic [3:0] vol_shift,
     input logic [4:0] vol_a_shift, vol_d_shift, vol_r_shift,
     input logic [11:0] vol_s_level,
     input logic [15:0] filter_F_floor,
@@ -183,7 +183,7 @@ module voice (
     // Voice volume control (output sample_vol)
     // Left shift by 1 before volume control
     logic [23:0] sample_vol;
-    audio_volume_control voice_vol_control (.vol_shift(vol_shift), .sample_in(sample_svf <<< 1), .sample_out(sample_vol));
+    audio_volume_control voice_vol_control (.vol_shift, .sample_in(sample_svf <<< 1), .sample_out(sample_vol));
 
     // ------------------------------------------------------------
     // Final output

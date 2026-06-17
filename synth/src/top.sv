@@ -43,7 +43,7 @@ module top (
 
     logic [1:0] wave_sel;
     logic detune_sel;
-    logic [2:0] vol_shift;
+    logic signed [3:0] vol_shift;
     logic [4:0] vol_a_shift, vol_d_shift, vol_r_shift;
     logic [11:0] vol_s_level;
     logic [15:0] filter_F_floor;
@@ -140,5 +140,5 @@ module top (
         .digit3(4'd10), .digit2(control_digit_value), .digit1(4'd10), .digit0(bar_count + 4'd1), .dps(4'b0011),
         .seg, .dp, .an
     );
-    
+
 endmodule
