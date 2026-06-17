@@ -14,13 +14,7 @@ module top (
     // Sample_tick is output from the last module
 
     logic sample_tick;
-
-    logic [23:0] phase;
-
-    logic [23:0] inc;
-    logic [23:0] sample_wave, sample_wave_detune, sample_env, sample_svf, sample_vol;
-
-    logic is_editing;
+    logic is_playing, is_editing;
     
     // ------------------------------------------------------------
     // Reset gen
@@ -104,7 +98,21 @@ module top (
     logic note_tick;
     clk_divider #(.DIV(12_500_000)) note_div (.clk, .rst, .tick(note_tick));
     
+    logic [5:0] position;
+    logic new_note;
     logic [3:0] bar_count;
+    logic signed [23:0] sample_voice_1;
+
+    note_seq_master seq (
+        .clk, .rst,
+        .note_tick, .sample_tick,
+        .pulse_edit, .pulse_play_stop,
+        .pulse_left(is_editing && rotary_pulse_neg), .pulse_right(is_editing && rotary_pulse_pos),
+        .pulse_bar_left, .pulse_bar_right,
+        .pulse_reset_position(1'b0),
+        .is_playing, .is_editing,
+        .position, .new_note, .bar_count
+    );
 
     voice voice1 (
         .clk, .rst,
@@ -112,22 +120,26 @@ module top (
         .vol_a_shift, .vol_d_shift, .vol_r_shift, .vol_s_level,
         .filter_F_floor, .filter_k, .filter_F_env_amount, .filter_a_shift, .filter_d_shift, .filter_r_shift, .filter_s_level,
 
-        .note_tick, .sample_tick,
-        .pulse_play_stop, .pulse_edit, .pulse_bar_left, .pulse_bar_right, .btn_clear_reset,
-        .rotary_pulse_pos(is_editing && rotary_pulse_pos), .rotary_pulse_neg(is_editing && rotary_pulse_neg),
+        .note_tick,
+        .sw_clear_note(btn_clear_reset), .is_playing, .is_editing,
+        .position, .new_note,
         .midi_in(midi_from_keyboard),
 
-        .led, .bar_count,
-        .is_editing,
-        .sample_out(sample_vol)
+        .led,
+        .sample_out(sample_voice_1)
     );
+
+    // ------------------------------------------------------------
+    // Voice volume control (output sample_out)
+    logic [23:0] sample_out;
+    audio_volume_control global_vol_control (.vol_shift(global_vol_shift), .sample_in(sample_voice_1), .sample_out(sample_out));
 
     // ------------------------------------------------------------
     // Transmit to I2S
 
     io_i2s_tx tx (
         .clk, .rst,
-        .left(sample_vol), .right(sample_vol),
+        .left(sample_out), .right(sample_out),
         .sample_req(sample_tick),
         .mclk, .bclk, .lrclk, .sdin
     );

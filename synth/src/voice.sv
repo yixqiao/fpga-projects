@@ -14,15 +14,14 @@ module voice (
     input logic [11:0] filter_s_level,
 
     // Note recorder
-    input logic note_tick, sample_tick,
-    input logic pulse_play_stop, pulse_edit, pulse_bar_left, pulse_bar_right, btn_clear_reset,
-    input logic rotary_pulse_pos, rotary_pulse_neg,
+    input logic note_tick,
+    input logic sw_clear_note, is_playing, is_editing,
+    input logic [5:0] position,
+    input logic new_note,
     input logic [7:0] midi_in,
 
     // Display out
     output logic [15:0] led,
-    output logic [3:0] bar_count,
-    output logic is_editing,
 
     // Audio out
     output logic [23:0] sample_out
@@ -34,13 +33,12 @@ module voice (
 
     note_recorder nr (
         .clk, .rst,
-        .note_tick, .sample_tick,
-        .pulse_play_stop, .pulse_edit, .pulse_left(rotary_pulse_neg), .pulse_right(rotary_pulse_pos),
-        .sw_clear_reset(btn_clear_reset),
-        .pulse_bar_left, .pulse_bar_right,
+        .note_tick,
+        .sw_clear_note,
+        .is_playing, .is_editing,
+        .position, .new_note,
         .midi_in, .midi_out(midi_final),
-        .led, .bar_count,
-        .is_editing
+        .led
     );
 
 
