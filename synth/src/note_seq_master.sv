@@ -11,7 +11,10 @@ module note_seq_master (
     output logic [3:0] bar_count
 );
     localparam IDLE=0, PLAYING=1, EDITING=2;
-    logic state, next_state;
+    logic [1:0] state, next_state;
+    
+    assign is_playing = state == PLAYING;
+    assign is_editing = state == EDITING;
 
     // Transitions
     always_comb begin
@@ -27,6 +30,7 @@ module note_seq_master (
         if (rst) begin
             state <= IDLE;
             position <= 0;
+            new_note <= 0;
         end
         else begin
             state <= next_state;
