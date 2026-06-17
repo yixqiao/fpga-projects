@@ -83,7 +83,7 @@ module control_params(
 
     // ------------------------------------------------------------
     // Detune selection
-    logic [1:0] detune_sel_c;
+    logic detune_sel_c;
     lib_saturating_counter #(.WIDTH(1), .MAX_CNT(1), .DEFAULT(0)) detune_sel_cnt (
         .clk, .rst,
         .tick_pos(rotary_pulse_pos && current_param==DETUNE_SEL_P), .tick_neg(rotary_pulse_neg && current_param==DETUNE_SEL_P),

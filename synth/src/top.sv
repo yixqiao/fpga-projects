@@ -77,12 +77,15 @@ module top (
     logic [7:0] midi_from_keyboard, midi_from_keyboard_raw;
     note_ps2_midi ps2_to_midi(.clk, .rst, .scancode(ps2_scancode), .valid(ps2_valid), .midi(midi_from_keyboard_raw)); // PS2 to midi
     always_comb begin
-        case (sw[1:0])
-            2'b00: midi_from_keyboard = midi_from_keyboard_raw - 12;
-            2'b01: midi_from_keyboard = midi_from_keyboard_raw;
-            2'b10: midi_from_keyboard = midi_from_keyboard_raw + 12;
-            2'b11: midi_from_keyboard = midi_from_keyboard_raw + 24;
-        endcase
+        if (midi_from_keyboard_raw == 8'hFF) midi_from_keyboard = 8'hFF;
+        else begin 
+            case (sw[1:0])
+                2'b00: midi_from_keyboard = midi_from_keyboard_raw - 12;
+                2'b01: midi_from_keyboard = midi_from_keyboard_raw;
+                2'b10: midi_from_keyboard = midi_from_keyboard_raw + 12;
+                2'b11: midi_from_keyboard = midi_from_keyboard_raw + 24;
+            endcase
+        end
     end
 
     logic [3:0] bar_count;
