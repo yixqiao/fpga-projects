@@ -197,16 +197,16 @@ module control_params(
             3'd0: filter_k = 16'sh6000;
             3'd1: filter_k = 16'sh5000;
             3'd2: filter_k = 16'sh4800;
-            3'd3: filter_k = 16'sh4000;
-            3'd4: filter_k = 16'sh3800;
-            3'd5: filter_k = 16'sh3000;
-            3'd6: filter_k = 16'sh2800;
-            3'd7: filter_k = 16'sh2000;
+            3'd3: filter_k = 16'sh4200;
+            3'd4: filter_k = 16'sh3C00;
+            3'd5: filter_k = 16'sh3600;
+            3'd6: filter_k = 16'sh3000;
+            3'd7: filter_k = 16'sh2800;
         endcase
     end
 
     // ------------------------------------------------------------
-    // Filter envelope mod amount (6 is the max)
+    // Filter envelope mod amount
     logic [2:0] filter_F_env_amount_c;
     lib_saturating_counter #(.WIDTH(3), .MAX_CNT(7), .DEFAULT(3)) filter_F_env_amount_cnt (
         .clk, .rst,
