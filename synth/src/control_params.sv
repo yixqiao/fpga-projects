@@ -17,7 +17,8 @@ module control_params(
     output logic [3:0] digit_value
 );
     localparam INVALID_P=0, WAVE_SEL_P=1, VOL_SHIFT_P=2, VOL_A_SHIFT_P=3, VOL_D_SHIFT_P=4, VOL_R_SHIFT_P=5, VOL_S_LEVEL_P=6;
-    localparam GLOBAL_VOL_SHIFT_P = 8;
+    localparam FILTER_F_FLOOR_P=8, FILTER_K_P=9, FILTER_F_ENV_AMOUNT_P=10, FILTER_A_SHIFT_P=11, FILTER_D_SHIFT_P=12, FILTER_R_SHIFT_P=13, FILTER_S_LEVEL_P=14;
+    localparam GLOBAL_VOL_SHIFT_P = 15;
     logic [4:0] current_param;
 
     logic mode_sw;
@@ -35,6 +36,13 @@ module control_params(
             7'b0_00_0101: current_param = VOL_D_SHIFT_P;
             7'b0_00_0110: current_param = VOL_R_SHIFT_P;
             7'b0_00_0111: current_param = VOL_S_LEVEL_P;
+            7'b0_01_0001: current_param = FILTER_F_FLOOR_P;
+            7'b0_01_0010: current_param = FILTER_K_P;
+            7'b0_01_0011: current_param = FILTER_F_ENV_AMOUNT_P;
+            7'b0_01_0100: current_param = FILTER_A_SHIFT_P;
+            7'b0_01_0101: current_param = FILTER_D_SHIFT_P;
+            7'b0_01_0110: current_param = FILTER_R_SHIFT_P;
+            7'b0_01_0111: current_param = FILTER_S_LEVEL_P;
             7'b1_00_0000: current_param = GLOBAL_VOL_SHIFT_P;
             default: current_param = INVALID_P;
         endcase
@@ -93,6 +101,69 @@ module control_params(
     end
 
     // ------------------------------------------------------------
+    // Envelope decay
+    logic [2:0] vol_d_shift_c;
+    lib_saturating_counter #(.WIDTH(3), .MAX_CNT(7), .DEFAULT(3)) vol_d_shift_cnt (
+        .clk, .rst,
+        .tick_pos(rotary_pulse_pos && current_param==VOL_D_SHIFT_P), .tick_neg(rotary_pulse_neg && current_param==VOL_D_SHIFT_P),
+        .digit(vol_d_shift_c)
+    );
+    always_comb begin
+        case (vol_d_shift_c)
+            3'd0: vol_d_shift = 5'd4;
+            3'd1: vol_d_shift = 5'd6;
+            3'd2: vol_d_shift = 5'd7;
+            3'd3: vol_d_shift = 5'd8;
+            3'd4: vol_d_shift = 5'd9;
+            3'd5: vol_d_shift = 5'd10;
+            3'd6: vol_d_shift = 5'd11;
+            3'd7: vol_d_shift = 5'd12;
+        endcase
+    end
+
+    // ------------------------------------------------------------
+    // Envelope release
+    logic [2:0] vol_r_shift_c;
+    lib_saturating_counter #(.WIDTH(3), .MAX_CNT(7), .DEFAULT(3)) vol_r_shift_cnt (
+        .clk, .rst,
+        .tick_pos(rotary_pulse_pos && current_param==VOL_R_SHIFT_P), .tick_neg(rotary_pulse_neg && current_param==VOL_R_SHIFT_P),
+        .digit(vol_r_shift_c)
+    );
+    always_comb begin
+        case (vol_r_shift_c)
+            3'd0: vol_r_shift = 5'd3;
+            3'd1: vol_r_shift = 5'd5;
+            3'd2: vol_r_shift = 5'd7;
+            3'd3: vol_r_shift = 5'd8;
+            3'd4: vol_r_shift = 5'd9;
+            3'd5: vol_r_shift = 5'd10;
+            3'd6: vol_r_shift = 5'd11;
+            3'd7: vol_r_shift = 5'd12;
+        endcase
+    end
+
+    // ------------------------------------------------------------
+    // Envelope sustain
+    logic [2:0] vol_s_level_c;
+    lib_saturating_counter #(.WIDTH(3), .MAX_CNT(7), .DEFAULT(3)) vol_s_level_cnt (
+        .clk, .rst,
+        .tick_pos(rotary_pulse_pos && current_param==VOL_S_LEVEL_P), .tick_neg(rotary_pulse_neg && current_param==VOL_S_LEVEL_P),
+        .digit(vol_s_level_c)
+    );
+    always_comb begin
+        case (vol_s_level_c)
+            3'd0: vol_s_level = 12'h000;
+            3'd1: vol_s_level = 12'h100;
+            3'd2: vol_s_level = 12'h200;
+            3'd3: vol_s_level = 12'h400;
+            3'd4: vol_s_level = 12'h600;
+            3'd5: vol_s_level = 12'h800;
+            3'd6: vol_s_level = 12'hC00;
+            3'd7: vol_s_level = 12'hF00;
+        endcase
+    end
+
+    // ------------------------------------------------------------
     // Global volume
     logic [2:0] global_vol_shift_c;
     lib_saturating_counter #(.WIDTH(3), .MAX_CNT(7), .DEFAULT(5)) global_vol_shift_cnt (
@@ -113,11 +184,6 @@ module control_params(
         endcase
     end
 
-
-    assign vol_d_shift = 5'd10;
-    assign vol_r_shift = 5'd8;
-    assign vol_s_level = 12'h600;
-
     // ------------------------------------------------------------
     // 7seg display
     always_comb begin
@@ -125,6 +191,9 @@ module control_params(
             WAVE_SEL_P: digit_value = {2'b0, wave_sel_c};
             VOL_SHIFT_P: digit_value = {1'b0, vol_shift_c};
             VOL_A_SHIFT_P: digit_value = {1'b0, vol_a_shift_c};
+            VOL_D_SHIFT_P: digit_value = {1'b0, vol_d_shift_c};
+            VOL_R_SHIFT_P: digit_value = {1'b0, vol_r_shift_c};
+            VOL_S_LEVEL_P: digit_value = {1'b0, vol_s_level_c};
             GLOBAL_VOL_SHIFT_P: digit_value = {1'b0, global_vol_shift_c};
             default: digit_value = 4'd10;
         endcase
