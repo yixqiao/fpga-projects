@@ -52,7 +52,7 @@ module top (
     logic [4:0] filter_a_shift, filter_d_shift, filter_r_shift;
     logic [11:0] filter_s_level;
 
-    logic [2:0] global_vol_shift;
+    logic signed [3:0] global_vol_shift;
 
     logic [3:0] control_digit_value;
 

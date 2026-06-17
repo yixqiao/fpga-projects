@@ -4,12 +4,12 @@ module voice (
     // Params
     input logic [1:0] wave_sel,
     input logic detune_sel,
-    input logic [3:0] vol_shift,
+    input logic signed [3:0] vol_shift,
     input logic [4:0] vol_a_shift, vol_d_shift, vol_r_shift,
     input logic [11:0] vol_s_level,
-    input logic [15:0] filter_F_floor,
-    input logic [15:0] filter_k,
-    input logic [15:0] filter_F_env_amount,
+    input logic signed [15:0] filter_F_floor,
+    input logic signed [15:0] filter_k,
+    input logic signed [15:0] filter_F_env_amount,
     input logic [4:0] filter_a_shift, filter_d_shift, filter_r_shift,
     input logic [11:0] filter_s_level,
 

@@ -52,7 +52,7 @@ module control_params(
 
     // ------------------------------------------------------------
     // Voice volume
-    logic [3:0] vol_shift_c;
+    logic [2:0] vol_shift_c;
     lib_saturating_counter #(.WIDTH(3), .MAX_CNT(7), .DEFAULT(5)) vol_shift_cnt (
         .clk, .rst,
         .tick_pos(rotary_pulse_pos && current_param==VOL_SHIFT_P), .tick_neg(rotary_pulse_neg && current_param==VOL_SHIFT_P),
@@ -324,7 +324,7 @@ module control_params(
 
     // ------------------------------------------------------------
     // Global volume
-    logic [3:0] global_vol_shift_c;
+    logic [2:0] global_vol_shift_c;
     lib_saturating_counter #(.WIDTH(3), .MAX_CNT(7), .DEFAULT(6)) global_vol_shift_cnt (
         .clk, .rst,
         .tick_pos(rotary_pulse_pos && current_param==GLOBAL_VOL_SHIFT_P), .tick_neg(rotary_pulse_neg && current_param==GLOBAL_VOL_SHIFT_P),
