@@ -150,8 +150,8 @@ module top (
     waveform_gen wave_gen_higher (.phase(phase_higher), .wave_sel, .sample(sample_wave_higher));
 
     always_comb begin
-        if (detune_sel) sample_wave_detune = $signed(sample_wave)>>>1 + $signed(sample_wave_lower)>>>2 + $signed(sample_wave_higher)>>>2;
-        else sample_wave_detune = $signed(sample_wave)>>>1;
+        if (detune_sel) sample_wave_detune = ($signed(sample_wave)>>>1) + ($signed(sample_wave_lower)>>>2) + ($signed(sample_wave_higher)>>>2);
+        else sample_wave_detune = ($signed(sample_wave)>>>1);
     end
     
     
