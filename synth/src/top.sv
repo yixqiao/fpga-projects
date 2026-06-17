@@ -36,6 +36,8 @@ module top (
     logic [4:0] vol_a_shift, vol_d_shift, vol_r_shift;
     logic [11:0] vol_s_level;
 
+    logic [2:0] global_vol_shift;
+
     logic [3:0] control_digit_value;
 
     control_params control (
@@ -45,6 +47,7 @@ module top (
         .wave_sel,
         .vol_shift, .vol_a_shift, .vol_d_shift, .vol_r_shift,
         .vol_s_level,
+        .global_vol_shift,
         .digit_value(control_digit_value)
     );
 
@@ -144,7 +147,7 @@ module top (
 
     // Volume control (output sample_vol)
     // Left shift by 1 before volume control
-    audio_volume_control vol_control (.volume(2'b10), .sample_in(sample_svf <<< 1), .sample_out(sample_vol));
+    audio_volume_control global_vol_control (.vol_shift(global_vol_shift), .sample_in(sample_svf <<< 1), .sample_out(sample_vol));
 
     // Transmit to I2S
     io_i2s_tx tx (

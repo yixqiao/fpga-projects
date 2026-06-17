@@ -21,10 +21,10 @@ module note_recorder (
     logic [23:0] inc_raw, inc_latched;
 
     assign bar_count = current_position[5:4];
-    logic edit_flash;
+    logic [2:0] flash_counter;
     always_ff @(posedge clk) begin
-        if (rst) edit_flash <= 0;
-        else if (note_tick) edit_flash <= !edit_flash;
+        if (rst) flash_counter <= '0;
+        else if (note_tick) flash_counter <= flash_counter + 1;
     end
     always_comb begin
         for (int j = 0; j < 16; j++) begin
@@ -32,9 +32,12 @@ module note_recorder (
                 PLAYING: led[j] = (current_position[3:0] == 4'(15-j))
                                 ? !(note_buf[{current_position[5:4], 4'(15-j)}] != 8'hFF)
                                 :  (note_buf[{current_position[5:4], 4'(15-j)}] != 8'hFF);
-                default: led[j] = (current_position[3:0] == 4'(15-j))
-                                ? edit_flash
-                                : (note_buf[{current_position[5:4], 4'(15-j)}] != 8'hFF); // TODO add a slower idle_flash
+                EDITING: led[j] = (current_position[3:0] == 4'(15-j))
+                                ? flash_counter[0]
+                                : (note_buf[{current_position[5:4], 4'(15-j)}] != 8'hFF);
+                default: led[j] = (current_position[3:0] == 4'(15-j)) // Idle
+                                ? flash_counter[2]
+                                : (note_buf[{current_position[5:4], 4'(15-j)}] != 8'hFF);
             endcase
         end
     end

@@ -1,7 +1,8 @@
 module lib_saturating_counter #(
     parameter WIDTH = 4,
     parameter MIN_CNT = 0,
-    parameter MAX_CNT = 9
+    parameter MAX_CNT = 9,
+    parameter DEFAULT = 0
 )(
     input  logic clk, rst,
     input  logic tick_pos, tick_neg,
@@ -12,7 +13,7 @@ module lib_saturating_counter #(
     assign at_min = (digit == WIDTH'(MIN_CNT));
 
     always_ff @(posedge clk) begin
-        if (rst) digit <= WIDTH'(MIN_CNT);
+        if (rst) digit <= WIDTH'(DEFAULT);
         else if (tick_pos && !at_max) digit <= digit + 1;
         else if (tick_neg && !at_min) digit <= digit - 1;
     end
