@@ -69,11 +69,10 @@ module top (
         .sel_a(sw[3]), .sel_d(sw[2]), .sel_s(sw[1]), .sel_r(sw[0]),
         .env_level
         );
+    
     logic signed [23:0] s1_reg;
     logic signed [12:0] env_reg;
     logic signed [36:0] mult_reg;
-
-    // TODO move envelope multiply into a separate module
     (* use_dsp48 = "yes" *)
     always_ff @(posedge clk) begin
         if (rst) begin
@@ -89,11 +88,7 @@ module top (
         end
     end
 
-    // F envelope modulation pipeline
-    // F_final = F_mod * env_level >> 12
-    // When env=0xFFF (max): F_final ≈ F_floor + F_mod (fully open)
-    // When env=0x000 (off):  F_final = F_floor (filter closed)
-
+    // Filter envelope (output F)
     logic signed [15:0] f_mod_reg;    // AREG: mod cutoff
     logic signed [12:0] env_f_reg;     // BREG: zero-extended env_level
     logic signed [28:0] f_mult_reg;    // MREG: 16+13 = 28-bit product
@@ -116,11 +111,12 @@ module top (
         end
     end
 
+
     // Filter (output sample_svf)
     // Right shift by one before filter
     audio_svf svf (
         .clk, .rst, .sample_tick,
-        .sample_in($signed(sample_env) >>> 2), .F(F + f_floor), .Q(sw[4] ? 16'sh3800 : 16'sh7000), .filt_sel(2'b00),
+        .sample_in($signed(sample_env) >>> 2), .F(F + f_floor), .k(sw[4] ? 16'sh3800 : 16'sh7000), .filt_sel(2'b00),
         .sample_out(sample_svf)
     );
 

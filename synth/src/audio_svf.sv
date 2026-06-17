@@ -2,13 +2,13 @@ module audio_svf (
     input  logic        clk, rst,
     input  logic        sample_tick,
     input  logic signed [23:0] sample_in,
-    input  logic signed [15:0] F, Q, // TODO rename Q to k, misleading
+    input  logic signed [15:0] F, k,
     input  logic [1:0]  filt_sel,
     output logic signed [23:0] sample_out
 );
     logic signed [23:0] low, band;
 
-    // ---- Multiply 1 (F*band, Q*band) pipeline ----
+    // ---- Multiply 1 (F*band, k*band) pipeline ----
     logic signed [15:0] f_a, q_a;         // AREG
     logic signed [23:0] band_b, in_r;     // BREG + held input
     logic signed [39:0] fb_m, qb_m;       // MREG (full width)
@@ -29,7 +29,7 @@ module audio_svf (
         else begin
             v0 <= sample_tick;
             if (sample_tick) begin
-                f_a <= F; q_a <= Q; band_b <= band;
+                f_a <= F; q_a <= k; band_b <= band;
                 in_r <= sample_in;
             end
         end
