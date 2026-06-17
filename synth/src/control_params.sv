@@ -13,7 +13,7 @@ module control_params(
     // output logic [4:0] filter_a_shift, filter_d_shift, filter_r_shift,
     // output logic [11:0] filter_s_level,
 
-    output logic [2:0] global_vol_shift,
+    // output logic [2:0] global_vol_shift,
     output logic [3:0] digit_value
 );
     localparam INVALID_P=0, WAVE_SEL_P=1, VOL_SHIFT_P=2, VOL_A_SHIFT_P=3, VOL_D_SHIFT_P=4, VOL_R_SHIFT_P=5, VOL_S_LEVEL_P=6;
@@ -75,14 +75,14 @@ module control_params(
     );
     always_comb begin
         case (vol_a_shift_c)
-            3'd0: vol_a_shift = 5'd3;
+            3'd0: vol_a_shift = 5'd2;
             3'd1: vol_a_shift = 5'd4;
             3'd2: vol_a_shift = 5'd5;
             3'd3: vol_a_shift = 5'd6;
             3'd4: vol_a_shift = 5'd8;
             3'd5: vol_a_shift = 5'd9;
             3'd6: vol_a_shift = 5'd10;
-            3'd7: vol_a_shift = 5'd11;
+            3'd7: vol_a_shift = 5'd12;
         endcase
     end
 
