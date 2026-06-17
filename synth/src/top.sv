@@ -1,7 +1,8 @@
 module top (
     input logic clk,
-    input logic [9:0] sw,
+    input logic [15:0] sw,
     input logic btnC, btnU, btnL, btnR, btnD,
+    input logic enc_a, enc_b,
     input logic PS2Clk, PS2Data,
     output logic [15:0] led,
     output logic [6:0] seg,
@@ -25,6 +26,27 @@ module top (
     logic [7:0] ps2_scancode;
     logic ps2_valid;
     io_ps2_rx ps2 (.clk, .rst, .ps2_clk(PS2Clk), .ps2_data(PS2Data), .scancode(ps2_scancode), .valid(ps2_valid));
+    
+    // Controls
+    logic rotary_pulse_pos, rotary_pulse_neg;
+    io_rotary_decoder rot_dec (.clk, .rst, .enc_a, .enc_b, .pulse_pos(rotary_pulse_pos), .pulse_neg(rotary_pulse_neg));
+
+    logic [1:0] wave_sel;
+    logic [2:0] vol_shift;
+    logic [4:0] vol_a_shift, vol_d_shift, vol_r_shift;
+    logic [11:0] vol_s_level;
+
+    logic [3:0] control_digit_value;
+
+    control_params control (
+        .clk, .rst,
+        .sw,
+        .rotary_pulse_pos, .rotary_pulse_neg,
+        .wave_sel,
+        .vol_shift, .vol_a_shift, .vol_d_shift, .vol_r_shift,
+        .vol_s_level,
+        .digit_value(control_digit_value)
+    );
 
 
     // Note recorder (output inc, adsr_gate, leds)
@@ -60,13 +82,13 @@ module top (
     );
 
     // Get waveform (output sample_wave)
-    waveform_gen wave_gen (.phase, .wave_sel(sw[7:6]), .sample(sample_wave));
+    waveform_gen wave_gen (.phase, .wave_sel, .sample(sample_wave));
 
     // Envelope (output sample_env)
     logic [11:0] env_level;
     envelope_adsr env_adsr (
         .clk, .rst, .gate(adsr_gate), .sample_tick,
-        .sel_a(sw[3]), .sel_d(sw[2]), .sel_s(sw[1]), .sel_r(sw[0]),
+        .a_shift(vol_a_shift), .d_shift(vol_d_shift), .r_shift(vol_r_shift), .s_level(vol_s_level),
         .env_level
         );
     
@@ -94,7 +116,7 @@ module top (
     logic signed [28:0] f_mult_reg;    // MREG: 16+13 = 28-bit product
     logic signed [15:0] F;             // PREG: final F after scale-back
     logic signed [15:0] f_floor;
-    assign f_floor = sw[5] ? 16'sh1000 : 16'sh0A00;
+    assign f_floor = 16'sh1000;
 
     (* use_dsp48 = "yes" *)
     always_ff @(posedge clk) begin
@@ -104,7 +126,7 @@ module top (
             f_mult_reg <= '0;
             F          <= '0;
         end else begin
-            f_mod_reg <= sw[5] ? 16'sh4000 : 16'sh2000;  // AREG
+            f_mod_reg <= 16'sh4000;  // AREG
             env_f_reg  <= $signed({1'b0, env_level});       // BREG: unsigned→signed
             f_mult_reg <= f_mod_reg * env_f_reg;           // MREG
             F          <= (f_mult_reg >>> 12);                // PREG
@@ -113,15 +135,16 @@ module top (
 
 
     // Filter (output sample_svf)
-    // Right shift by one before filter
+    // Right shift by two before filter
     audio_svf svf (
         .clk, .rst, .sample_tick,
-        .sample_in($signed(sample_env) >>> 2), .F(F + f_floor), .k(sw[4] ? 16'sh3800 : 16'sh7000), .filt_sel(2'b00),
+        .sample_in($signed(sample_env) >>> 2), .F(F + f_floor), .k(16'sh3800), .filt_sel(2'b00),
         .sample_out(sample_svf)
     );
 
     // Volume control (output sample_vol)
-    audio_volume_control vol_control (.volume(sw[9:8]), .sample_in(sample_svf <<< 1), .sample_out(sample_vol));
+    // Left shift by 1 before volume control
+    audio_volume_control vol_control (.volume(2'b10), .sample_in(sample_svf <<< 1), .sample_out(sample_vol));
 
     // Transmit to I2S
     io_i2s_tx tx (
@@ -135,7 +158,7 @@ module top (
     // Output to 7seg
     seg7_mux4 seg7 (
         .clk, .rst,
-        .digit3(4'd10), .digit2(4'd10), .digit1(4'd10), .digit0(bar_count + 4'd1), .dps(4'b1011),
+        .digit3(4'd10), .digit2(control_digit_value), .digit1(4'd10), .digit0(bar_count + 4'd1), .dps(4'b0011),
         .seg, .dp, .an
     );
 endmodule

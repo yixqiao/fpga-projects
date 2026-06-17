@@ -2,7 +2,8 @@ module envelope_adsr (
     input logic clk, rst,
     input logic gate,
     input logic sample_tick,
-    input logic sel_a, sel_d, sel_s, sel_r,
+    input logic [4:0] a_shift, d_shift, r_shift,
+    input logic [11:0] s_level,
     output logic [11:0] env_level
 );
     localparam [11:0] ENV_MAX = 12'hFFF;
@@ -12,13 +13,6 @@ module envelope_adsr (
     logic [2:0] state, next_state;
     logic pulse_start, pulse_end, gate_prev;
     logic [3:0] tick_cnt;
-
-    logic [4:0] a_shift, d_shift, r_shift;
-    logic [11:0] s_level;
-    assign a_shift = sel_a ? 5'd10 : 5'd5;
-    assign d_shift = sel_d ? 5'd10 : 5'd8;
-    assign s_level = sel_s ? 12'h600: 12'h100;
-    assign r_shift = sel_r ? 5'd10 : 5'd7;
 
     logic [11:0] attack_delta, decay_delta, release_delta;
     assign attack_delta  = (ENV_MAX - env_level) >> a_shift;
