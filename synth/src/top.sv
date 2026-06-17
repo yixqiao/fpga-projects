@@ -99,6 +99,7 @@ module top (
         else if (inc_raw != 24'h000000) inc_latched <= inc_raw;
     end
     assign inc = inc_latched;
+    assign adsr_gate = midi_final != 8'hFF;
     
     // Get phase (output phase)
     phase_acc #(.W(24)) nco (
