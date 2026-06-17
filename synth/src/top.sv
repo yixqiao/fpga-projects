@@ -15,7 +15,7 @@ module top (
     logic [23:0] phase;
 
     logic [23:0] inc;
-    logic [23:0] sample_wave, sample_env, sample_svf, sample_vol;
+    logic [23:0] sample_wave, sample_wave_detune, sample_env, sample_svf, sample_vol;
 
     logic is_editing;
 
@@ -93,12 +93,24 @@ module top (
 
     logic [23:0] inc_raw, inc_latched;
     note_midi_inc inc_default (.midi(midi_final), .detune(2'b00), .inc(inc_raw));
-
     always_ff @(posedge clk) begin
         if (rst) inc_latched <= '0;
         else if (inc_raw != 24'h000000) inc_latched <= inc_raw;
     end
     assign inc = inc_latched;
+
+    logic [23:0] inc_raw_lower, inc_latched_lower;
+    note_midi_inc inc_lower (.midi(midi_final), .detune(2'b10), .inc(inc_raw_lower));
+    always_ff @(posedge clk) begin
+        if (rst) inc_latched_lower <= '0;
+        else if (inc_raw_lower != 24'h000000) inc_latched_lower <= inc_raw_lower;
+    end
+    logic [23:0] inc_raw_higher, inc_latched_higher;
+    note_midi_inc inc_higher (.midi(midi_final), .detune(2'b01), .inc(inc_raw_higher));
+    always_ff @(posedge clk) begin
+        if (rst) inc_latched_higher <= '0;
+        else if (inc_raw_higher != 24'h000000) inc_latched_higher <= inc_raw_higher;
+    end
     
     // Get phase (output phase)
     phase_acc #(.W(24)) nco (
@@ -106,10 +118,28 @@ module top (
         .tick(sample_tick), .inc,
         .phase
     );
+    logic [23:0] phase_lower, phase_higher;
+    phase_acc #(.W(24)) nco_lower (
+        .clk, .rst,
+        .tick(sample_tick), .inc(inc_latched_lower),
+        .phase(phase_lower)
+    );
+    phase_acc #(.W(24)) nco_higher (
+        .clk, .rst,
+        .tick(sample_tick), .inc(inc_latched_higher),
+        .phase(phase_higher)
+    );
 
     // Get waveform (output sample_wave)
     waveform_gen wave_gen (.phase, .wave_sel, .sample(sample_wave));
 
+    logic [23:0] sample_wave_lower, sample_wave_higher;
+    waveform_gen wave_gen_lower (.phase(phase_lower), .wave_sel, .sample(sample_wave_lower));
+    waveform_gen wave_gen_higher (.phase(phase_higher), .wave_sel, .sample(sample_wave_higher));
+
+    assign sample_wave_detune = $signed(sample_wave)>>>1 + $signed(sample_wave_lower)>>>2 + $signed(sample_wave_higher)>>>2;
+    
+    
     // Envelope (output sample_env)
     logic [11:0] env_level;
     envelope_adsr env_adsr (
@@ -129,7 +159,7 @@ module top (
             mult_reg <= '0;
             sample_env <= '0;
         end else begin
-            s1_reg   <= sample_wave; // AREG stage
+            s1_reg   <= sample_wave_detune; // AREG stage
             env_reg  <= {1'b0, env_level}; // BREG stage
             mult_reg <= s1_reg * env_reg; // MREG stage
             sample_env <= mult_reg >>> 12; // PREG stage
