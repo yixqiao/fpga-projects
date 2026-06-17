@@ -36,9 +36,9 @@ module control_params(
             7'b0_00_0101: current_param = VOL_D_SHIFT_P;
             7'b0_00_0110: current_param = VOL_R_SHIFT_P;
             7'b0_00_0111: current_param = VOL_S_LEVEL_P;
-            7'b0_01_0001: current_param = FILTER_F_FLOOR_P;
-            7'b0_01_0010: current_param = FILTER_K_P;
-            7'b0_01_0011: current_param = FILTER_F_ENV_AMOUNT_P;
+            7'b0_01_0000: current_param = FILTER_F_FLOOR_P;
+            7'b0_01_0001: current_param = FILTER_K_P;
+            7'b0_01_0010: current_param = FILTER_F_ENV_AMOUNT_P;
             7'b0_01_0100: current_param = FILTER_A_SHIFT_P;
             7'b0_01_0101: current_param = FILTER_D_SHIFT_P;
             7'b0_01_0110: current_param = FILTER_R_SHIFT_P;
@@ -166,7 +166,7 @@ module control_params(
     // ------------------------------------------------------------
     // Filter F floor
     logic [2:0] filter_F_floor_c;
-    lib_saturating_counter #(.WIDTH(3), .MAX_CNT(7), .DEFAULT(3)) filter_F_floor_cnt (
+    lib_saturating_counter #(.WIDTH(3), .MAX_CNT(7), .DEFAULT(2)) filter_F_floor_cnt (
         .clk, .rst,
         .tick_pos(rotary_pulse_pos && current_param==FILTER_F_FLOOR_P), .tick_neg(rotary_pulse_neg && current_param==FILTER_F_FLOOR_P),
         .digit(filter_F_floor_c)
@@ -174,18 +174,18 @@ module control_params(
     always_comb begin
         case (filter_F_floor_c)
             3'd0: filter_F_floor = 16'sh0200;
-            3'd1: filter_F_floor = 16'sh0600;
-            3'd2: filter_F_floor = 16'sh0A00;
-            3'd3: filter_F_floor = 16'sh0C00;
-            3'd4: filter_F_floor = 16'sh1000;
-            3'd5: filter_F_floor = 16'sh2000;
-            3'd6: filter_F_floor = 16'sh4000;
-            3'd7: filter_F_floor = 16'shC000;
+            3'd1: filter_F_floor = 16'sh0800;
+            3'd2: filter_F_floor = 16'sh1000;
+            3'd3: filter_F_floor = 16'sh2000;
+            3'd4: filter_F_floor = 16'sh3000;
+            3'd5: filter_F_floor = 16'sh4000;
+            3'd6: filter_F_floor = 16'sh5000;
+            3'd7: filter_F_floor = 16'sh7000;
         endcase
     end
 
     // ------------------------------------------------------------
-    // Filter K (Q)
+    // Filter k (Q)
     logic [2:0] filter_k_c;
     lib_saturating_counter #(.WIDTH(3), .MAX_CNT(7), .DEFAULT(3)) filter_k_cnt (
         .clk, .rst,
@@ -194,19 +194,19 @@ module control_params(
     );
     always_comb begin
         case (filter_k_c)
-            3'd0: filter_k = 16'sh0000;
-            3'd1: filter_k = 16'sh2000;
-            3'd2: filter_k = 16'sh3000;
+            3'd0: filter_k = 16'sh6000;
+            3'd1: filter_k = 16'sh5000;
+            3'd2: filter_k = 16'sh4800;
             3'd3: filter_k = 16'sh4000;
-            3'd4: filter_k = 16'sh5000;
-            3'd5: filter_k = 16'sh6000;
-            3'd6: filter_k = 16'sh8000;
-            3'd7: filter_k = 16'shA000;
+            3'd4: filter_k = 16'sh3800;
+            3'd5: filter_k = 16'sh3000;
+            3'd6: filter_k = 16'sh2800;
+            3'd7: filter_k = 16'sh2000;
         endcase
     end
 
     // ------------------------------------------------------------
-    // Filter envelope mod amount
+    // Filter envelope mod amount (6 is the max)
     logic [2:0] filter_F_env_amount_c;
     lib_saturating_counter #(.WIDTH(3), .MAX_CNT(7), .DEFAULT(3)) filter_F_env_amount_cnt (
         .clk, .rst,
@@ -216,13 +216,13 @@ module control_params(
     always_comb begin
         case (filter_F_env_amount_c)
             3'd0: filter_F_env_amount = 16'sh0000;
-            3'd1: filter_F_env_amount = 16'sh0400;
-            3'd2: filter_F_env_amount = 16'sh0800;
-            3'd3: filter_F_env_amount = 16'sh1000;
-            3'd4: filter_F_env_amount = 16'sh2000;
+            3'd1: filter_F_env_amount = 16'sh0800;
+            3'd2: filter_F_env_amount = 16'sh1000;
+            3'd3: filter_F_env_amount = 16'sh2000;
+            3'd4: filter_F_env_amount = 16'sh3000;
             3'd5: filter_F_env_amount = 16'sh4000;
-            3'd6: filter_F_env_amount = 16'sh6000;
-            3'd7: filter_F_env_amount = 16'sh8000;
+            3'd6: filter_F_env_amount = 16'sh5000;
+            3'd7: filter_F_env_amount = 16'sh7000;
         endcase
     end
 
