@@ -140,7 +140,7 @@ module top (
     waveform_gen wave_gen_lower (.phase(phase_lower), .wave_sel, .sample(sample_wave_lower));
     waveform_gen wave_gen_higher (.phase(phase_higher), .wave_sel, .sample(sample_wave_higher));
 
-    assign sample_wave_detune = $signed(sample_wave)>>>1 + $signed(sample_wave_lower)>>>2 + $signed(sample_wave_higher)>>>2;
+    assign sample_wave_detune = ($signed(sample_wave)>>>1) + ($signed(sample_wave_lower)>>>2) + ($signed(sample_wave_higher)>>>2);
     
     
     // Envelope (output sample_env)
