@@ -11,7 +11,7 @@ module tb_note_recorder;
 
     note_recorder dut (
         .clk, .rst, .note_tick, .sample_tick,
-        .pulse_play_stop, .pulse_edit, .pulse_left, .pulse_right, .pulse_clear_note,
+        .pulse_play_stop, .pulse_edit, .pulse_left, .pulse_right,
         .midi_in, .inc, .gate,
         .led, .bar_count
     );

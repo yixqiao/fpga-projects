@@ -17,6 +17,8 @@ module top (
     logic [23:0] inc;
     logic [23:0] sample_wave, sample_env, sample_svf, sample_vol;
 
+    logic is_editing;
+
     // Reset gen
     rst_gen rg (.clk, .rst);
 
@@ -48,7 +50,7 @@ module top (
     control_params control (
         .clk, .rst,
         .sw,
-        .rotary_pulse_pos, .rotary_pulse_neg,
+        .rotary_pulse_pos(!is_editing && rotary_pulse_pos), .rotary_pulse_neg(!is_editing && rotary_pulse_neg),
         .wave_sel,
         .vol_shift, .vol_a_shift, .vol_d_shift, .vol_r_shift,
         .vol_s_level,
@@ -61,12 +63,12 @@ module top (
 
     // Note recorder (output inc, adsr_gate, leds)
     logic adsr_gate;
-    logic pulse_play_stop, pulse_edit, pulse_left, pulse_right, pulse_clear_note;
+    logic pulse_play_stop, pulse_edit, pulse_bar_left, pulse_bar_right, btn_clear_reset;
     io_btn_debouncer db_pulse_play_stop(.clk, .rst, .in(btnC), .out(), .pulse_pos(pulse_play_stop), .pulse_neg());
     io_btn_debouncer db_pulse_edit(.clk, .rst, .in(btnU), .out(), .pulse_pos(pulse_edit), .pulse_neg());
-    io_btn_debouncer db_pulse_left(.clk, .rst, .in(btnL), .out(), .pulse_pos(pulse_left), .pulse_neg());
-    io_btn_debouncer db_pulse_right(.clk, .rst, .in(btnR), .out(), .pulse_pos(pulse_right), .pulse_neg());
-    io_btn_debouncer db_pulse_clear_note(.clk, .rst, .in(btnD), .out(), .pulse_pos(pulse_clear_note), .pulse_neg());
+    io_btn_debouncer db_pulse_bar_left(.clk, .rst, .in(btnL), .out(), .pulse_pos(pulse_bar_left), .pulse_neg());
+    io_btn_debouncer db_pulse_bar_right(.clk, .rst, .in(btnR), .out(), .pulse_pos(pulse_bar_right), .pulse_neg());
+    io_btn_debouncer db_btn_clear_reset(.clk, .rst, .in(btnD), .out(btn_clear_reset), .pulse_pos(), .pulse_neg());
 
     logic note_tick;
     clk_divider #(.DIV(12_500_000)) note_div (.clk, .rst, .tick(note_tick));
@@ -79,9 +81,12 @@ module top (
     note_recorder nr (
         .clk, .rst,
         .note_tick, .sample_tick,
-        .pulse_play_stop, .pulse_edit, .pulse_left, .pulse_right, .pulse_clear_note,
+        .pulse_play_stop, .pulse_edit, .pulse_left(is_editing && rotary_pulse_neg), .pulse_right(is_editing && rotary_pulse_pos),
+        .sw_clear_reset(btn_clear_reset),
+        .pulse_bar_left, .pulse_bar_right,
         .midi_in(midi_from_keyboard), .inc, .gate(adsr_gate),
-        .led, .bar_count
+        .led, .bar_count,
+        .is_editing
     );
     
     // Get phase (output phase)

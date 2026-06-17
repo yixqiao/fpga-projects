@@ -2,12 +2,14 @@ module note_recorder (
     input logic clk, rst,
     input logic note_tick,
     input logic sample_tick,
-    input logic pulse_play_stop, pulse_edit, pulse_left, pulse_right, pulse_clear_note,
+    input logic pulse_play_stop, pulse_edit, pulse_left, pulse_right, sw_clear_reset,
+    input logic pulse_bar_left, pulse_bar_right,
     input logic [7:0] midi_in,
     output logic [23:0] inc,
     output logic gate,
     output logic [15:0] led,
-    output logic [3:0] bar_count
+    output logic [3:0] bar_count,
+    output logic is_editing
 );    
     localparam IDLE=0, EDITING=1, PLAYING=2;
 
@@ -41,6 +43,8 @@ module note_recorder (
             endcase
         end
     end
+
+    assign is_editing = state == EDITING;
 
     // Transitions
     always_comb begin
@@ -78,23 +82,27 @@ module note_recorder (
             state <= next_state;
             if (sample_tick) new_note <= 0;
 
-            if (state == EDITING) begin
-                if (pulse_left) current_position <= current_position - 1;
-                else if (pulse_right) current_position <= current_position + 1;
-                else if (pulse_clear_note) note_buf[current_position] <= 8'hFF;
-                else begin
-                    if (midi_in != 8'hFF) note_buf[current_position] <= midi_in;
+            if (pulse_bar_left) current_position <= current_position - 16;
+            else if (pulse_bar_right) current_position <= current_position + 16;
+            else begin
+                if (state == EDITING) begin
+                    if (pulse_left) current_position <= current_position - 1;
+                    else if (pulse_right) current_position <= current_position + 1;
+                    else if (sw_clear_reset) note_buf[current_position] <= 8'hFF;
+                    else begin
+                        if (midi_in != 8'hFF) note_buf[current_position] <= midi_in;
+                    end
                 end
-            end
-            else if (state == PLAYING) begin
-                if (pulse_clear_note) current_position <= '0;
-                if (note_tick) begin
-                    if (note_buf[current_position + 1] != note_buf[current_position]) new_note <= 1;
-                    current_position <= current_position + 1;
+                else if (state == PLAYING) begin
+                    if (sw_clear_reset) current_position <= '0;
+                    if (note_tick) begin
+                        if (note_buf[current_position + 1] != note_buf[current_position]) new_note <= 1;
+                        current_position <= current_position + 1;
+                    end
                 end
-            end
-            else begin // Idle
-                if (pulse_clear_note) current_position <= '0;
+                else begin // Idle
+                    if (sw_clear_reset) current_position <= '0;
+                end
             end
         end
     end
