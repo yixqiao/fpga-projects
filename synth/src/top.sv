@@ -70,12 +70,12 @@ module top (
     // Input processing (output buttons, keyboard midi)
 
     logic adsr_gate;
-    logic pulse_play_stop, pulse_edit, pulse_bar_left, pulse_bar_right, btn_clear_reset;
+    logic pulse_play_stop, pulse_edit, pulse_bar_left, pulse_bar_right, btn_clear_note, pulse_reset_position;
     io_btn_debouncer db_pulse_play_stop(.clk, .rst, .in(btnC), .out(), .pulse_pos(pulse_play_stop), .pulse_neg());
     io_btn_debouncer db_pulse_edit(.clk, .rst, .in(btnU), .out(), .pulse_pos(pulse_edit), .pulse_neg());
     io_btn_debouncer db_pulse_bar_left(.clk, .rst, .in(btnL), .out(), .pulse_pos(pulse_bar_left), .pulse_neg());
     io_btn_debouncer db_pulse_bar_right(.clk, .rst, .in(btnR), .out(), .pulse_pos(pulse_bar_right), .pulse_neg());
-    io_btn_debouncer db_btn_clear_reset(.clk, .rst, .in(btnD), .out(btn_clear_reset), .pulse_pos(), .pulse_neg());
+    io_btn_debouncer db_btn_down(.clk, .rst, .in(btnD), .out(btn_clear_note), .pulse_pos(pulse_reset_position), .pulse_neg());
 
     logic [7:0] midi_from_keyboard, midi_from_keyboard_raw;
     note_ps2_midi ps2_to_midi(.clk, .rst, .scancode(ps2_scancode), .valid(ps2_valid), .midi(midi_from_keyboard_raw)); // PS2 to midi
@@ -101,8 +101,11 @@ module top (
     logic [5:0] position;
     logic new_note;
     logic [3:0] bar_count;
-    logic signed [23:0] sample_voice_1, sample_voice_2;
-    logic [15:0] led_voice_1, led_voice_2;
+    logic signed [23:0] sample_voice_0, sample_voice_1, sample_voice_2, sample_voice_3; // TODO maybe make these arrays, and make voices a generator?
+    logic [15:0] led_voice_0, led_voice_1, led_voice_2, led_voice_3;
+
+    logic [2:0] current_voice;
+    assign current_voice = sw[13:12];
 
     note_seq_master seq (
         .clk, .rst,
@@ -110,9 +113,25 @@ module top (
         .pulse_edit, .pulse_play_stop,
         .pulse_left(is_editing && rotary_pulse_neg), .pulse_right(is_editing && rotary_pulse_pos),
         .pulse_bar_left, .pulse_bar_right,
-        .pulse_reset_position(1'b0), // TODO gate this pulse on is_editing
+        .pulse_reset_position(!is_editing && pulse_reset_position), // TODO gate this pulse on is_editing
         .is_playing, .is_editing,
         .position, .new_note, .bar_count
+    );
+
+    voice voice0 (
+        .clk, .rst,
+        .wave_sel, .detune_sel, .vol_shift,
+        .vol_a_shift, .vol_d_shift, .vol_r_shift, .vol_s_level,
+        .filter_F_floor, .filter_k, .filter_F_env_amount, .filter_a_shift, .filter_d_shift, .filter_r_shift, .filter_s_level,
+
+        .note_tick,
+        .sw_clear_note(is_editing && (current_voice==2'b00) && btn_clear_note), .is_playing, .is_editing,
+        .position, .new_note,
+        .midi_in((current_voice==2'b00) ? midi_from_keyboard : 8'hFF),
+        .sample_tick,
+
+        .led(led_voice_0),
+        .sample_out(sample_voice_0)
     );
 
     voice voice1 (
@@ -122,15 +141,15 @@ module top (
         .filter_F_floor, .filter_k, .filter_F_env_amount, .filter_a_shift, .filter_d_shift, .filter_r_shift, .filter_s_level,
 
         .note_tick,
-        .sw_clear_note(!sw[0] && btn_clear_reset), .is_playing, .is_editing,
+        .sw_clear_note(is_editing && (current_voice==2'b01) && btn_clear_note), .is_playing, .is_editing,
         .position, .new_note,
-        .midi_in(!sw[0] ? midi_from_keyboard : 8'hFF),
+        .midi_in((current_voice==2'b01) ? midi_from_keyboard : 8'hFF),
         .sample_tick,
 
         .led(led_voice_1),
         .sample_out(sample_voice_1)
     );
-
+    
     voice voice2 (
         .clk, .rst,
         .wave_sel, .detune_sel, .vol_shift,
@@ -138,21 +157,44 @@ module top (
         .filter_F_floor, .filter_k, .filter_F_env_amount, .filter_a_shift, .filter_d_shift, .filter_r_shift, .filter_s_level,
 
         .note_tick,
-        .sw_clear_note(sw[0] && btn_clear_reset), .is_playing, .is_editing,
+        .sw_clear_note(is_editing && (current_voice==2'b10) && btn_clear_note), .is_playing, .is_editing,
         .position, .new_note,
-        .midi_in(sw[0] ? midi_from_keyboard : 8'hFF),
+        .midi_in((current_voice==2'b10) ? midi_from_keyboard : 8'hFF),
         .sample_tick,
 
         .led(led_voice_2),
         .sample_out(sample_voice_2)
     );
+    
+    voice voice3 (
+        .clk, .rst,
+        .wave_sel, .detune_sel, .vol_shift,
+        .vol_a_shift, .vol_d_shift, .vol_r_shift, .vol_s_level,
+        .filter_F_floor, .filter_k, .filter_F_env_amount, .filter_a_shift, .filter_d_shift, .filter_r_shift, .filter_s_level,
 
-    assign led = sw[0] ? led_voice_2 : led_voice_1;
+        .note_tick,
+        .sw_clear_note(is_editing && (current_voice==2'b10) && btn_clear_note), .is_playing, .is_editing,
+        .position, .new_note,
+        .midi_in((current_voice==2'b10) ? midi_from_keyboard : 8'hFF),
+        .sample_tick,
+
+        .led(led_voice_3),
+        .sample_out(sample_voice_3)
+    );
+
+    always_comb begin
+        case (current_voice)
+            2'b00: led = led_voice_0;
+            2'b01: led = led_voice_1;
+            2'b10: led = led_voice_2;
+            2'b11: led = led_voice_3;
+        endcase
+    end
 
     // ------------------------------------------------------------
     // Voice volume control (output sample_out)
     logic [23:0] sample_voices_mixed, sample_out;
-    assign sample_voices_mixed = sample_voice_1 + sample_voice_2;
+    assign sample_voices_mixed = sample_voice_0 + sample_voice_1 + sample_voice_2 + sample_voice_3;
     audio_volume_control global_vol_control (.vol_shift(global_vol_shift), .sample_in(sample_voices_mixed), .sample_out(sample_out));
 
     // ------------------------------------------------------------

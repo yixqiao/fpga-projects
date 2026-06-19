@@ -53,21 +53,21 @@ module control_params(
     // ------------------------------------------------------------
     // Voice volume
     logic [2:0] vol_shift_c;
-    lib_saturating_counter #(.WIDTH(3), .MAX_CNT(7), .DEFAULT(5)) vol_shift_cnt (
+    lib_saturating_counter #(.WIDTH(3), .MAX_CNT(7), .DEFAULT(4)) vol_shift_cnt (
         .clk, .rst,
         .tick_pos(rotary_pulse_pos && current_param==VOL_SHIFT_P), .tick_neg(rotary_pulse_neg && current_param==VOL_SHIFT_P),
         .digit(vol_shift_c)
     );
     always_comb begin
         case (vol_shift_c)
-            3'd0: vol_shift = -6;
-            3'd1: vol_shift = -5;
-            3'd2: vol_shift = -4;
-            3'd3: vol_shift = -3;
-            3'd4: vol_shift = -2;
-            3'd5: vol_shift = -1;
-            3'd6: vol_shift = 0;
-            3'd7: vol_shift = 1;
+            3'd0: vol_shift = -7;
+            3'd1: vol_shift = -6;
+            3'd2: vol_shift = -5;
+            3'd3: vol_shift = -4;
+            3'd4: vol_shift = -3;
+            3'd5: vol_shift = -2;
+            3'd6: vol_shift = -1;
+            3'd7: vol_shift = 0;
         endcase
     end
 
