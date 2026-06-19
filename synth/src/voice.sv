@@ -19,6 +19,8 @@ module voice (
     input logic [5:0] position,
     input logic new_note,
     input logic [7:0] midi_in,
+    
+    input logic sample_tick,
 
     // Display out
     output logic [15:0] led,

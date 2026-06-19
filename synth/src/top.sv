@@ -110,7 +110,7 @@ module top (
         .pulse_edit, .pulse_play_stop,
         .pulse_left(is_editing && rotary_pulse_neg), .pulse_right(is_editing && rotary_pulse_pos),
         .pulse_bar_left, .pulse_bar_right,
-        .pulse_reset_position(1'b0),
+        .pulse_reset_position(1'b0), // TODO gate this pulse on is_editing
         .is_playing, .is_editing,
         .position, .new_note, .bar_count
     );
@@ -125,6 +125,7 @@ module top (
         .sw_clear_note(!sw[0] && btn_clear_reset), .is_playing, .is_editing,
         .position, .new_note,
         .midi_in(!sw[0] ? midi_from_keyboard : 8'hFF),
+        .sample_tick,
 
         .led(led_voice_1),
         .sample_out(sample_voice_1)
@@ -140,6 +141,7 @@ module top (
         .sw_clear_note(sw[0] && btn_clear_reset), .is_playing, .is_editing,
         .position, .new_note,
         .midi_in(sw[0] ? midi_from_keyboard : 8'hFF),
+        .sample_tick,
 
         .led(led_voice_2),
         .sample_out(sample_voice_2)
