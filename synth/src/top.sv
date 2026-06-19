@@ -173,9 +173,9 @@ module top (
         .filter_F_floor, .filter_k, .filter_F_env_amount, .filter_a_shift, .filter_d_shift, .filter_r_shift, .filter_s_level,
 
         .note_tick,
-        .sw_clear_note(is_editing && (current_voice==2'b10) && btn_clear_note), .is_playing, .is_editing,
+        .sw_clear_note(is_editing && (current_voice==2'b11) && btn_clear_note), .is_playing, .is_editing,
         .position, .new_note,
-        .midi_in((current_voice==2'b10) ? midi_from_keyboard : 8'hFF),
+        .midi_in((current_voice==2'b11) ? midi_from_keyboard : 8'hFF),
         .sample_tick,
 
         .led(led_voice_3),
@@ -188,6 +188,7 @@ module top (
             2'b01: led = led_voice_1;
             2'b10: led = led_voice_2;
             2'b11: led = led_voice_3;
+            default: led = '0;
         endcase
     end
 
