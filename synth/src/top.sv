@@ -101,7 +101,8 @@ module top (
     logic [5:0] position;
     logic new_note;
     logic [3:0] bar_count;
-    logic signed [23:0] sample_voice_1;
+    logic signed [23:0] sample_voice_1, sample_voice_2;
+    logic [15:0] led_voice_1, led_voice_2;
 
     note_seq_master seq (
         .clk, .rst,
@@ -121,18 +122,36 @@ module top (
         .filter_F_floor, .filter_k, .filter_F_env_amount, .filter_a_shift, .filter_d_shift, .filter_r_shift, .filter_s_level,
 
         .note_tick,
-        .sw_clear_note(btn_clear_reset), .is_playing, .is_editing,
+        .sw_clear_note(!sw[0] && btn_clear_reset), .is_playing, .is_editing,
         .position, .new_note,
-        .midi_in(midi_from_keyboard),
+        .midi_in(!sw[0] ? midi_from_keyboard : 8'hFF),
 
-        .led,
+        .led(led_voice_1),
         .sample_out(sample_voice_1)
     );
 
+    voice voice2 (
+        .clk, .rst,
+        .wave_sel, .detune_sel, .vol_shift,
+        .vol_a_shift, .vol_d_shift, .vol_r_shift, .vol_s_level,
+        .filter_F_floor, .filter_k, .filter_F_env_amount, .filter_a_shift, .filter_d_shift, .filter_r_shift, .filter_s_level,
+
+        .note_tick,
+        .sw_clear_note(sw[0] && btn_clear_reset), .is_playing, .is_editing,
+        .position, .new_note,
+        .midi_in(sw[0] ? midi_from_keyboard : 8'hFF),
+
+        .led(led_voice_2),
+        .sample_out(sample_voice_2)
+    );
+
+    assign led = sw[0] ? led_voice_2 : led_voice_1;
+
     // ------------------------------------------------------------
     // Voice volume control (output sample_out)
-    logic [23:0] sample_out;
-    audio_volume_control global_vol_control (.vol_shift(global_vol_shift), .sample_in(sample_voice_1), .sample_out(sample_out));
+    logic [23:0] sample_voices_mixed, sample_out;
+    assign sample_voices_mixed = sample_voice_1 + sample_voice_2;
+    audio_volume_control global_vol_control (.vol_shift(global_vol_shift), .sample_in(sample_voices_mixed), .sample_out(sample_out));
 
     // ------------------------------------------------------------
     // Transmit to I2S
